@@ -1,0 +1,357 @@
+/*
+ * Design tokens — fonte única de verdade da paleta.
+ * Trocar a identidade visual = editar este arquivo (e nada mais).
+ *
+ * Estrutura em três camadas, cada camada mais "abstrata":
+ *
+ *   1) PRIMITIVOS (--color-primary-500, --gray-700, etc.) — valores
+ *      brutos, vindos do brand. Light/dark NÃO mexem aqui — eles só
+ *      remapeiam quais primitivos cada semântica usa.
+ *
+ *   2) SEMÂNTICAS DE BRAND (--color-primary, --color-secondary, com
+ *      hover/active/light/lighter/surface). Para componentes que vão
+ *      pintar de "cor da marca" sem se preocupar com qual hex é.
+ *
+ *   3) SEMÂNTICAS DE UI (--color-text-primary, --color-background-…,
+ *      --color-border-…, --color-success/warning/danger/info). É o
+ *      que o app inteiro usa hoje — mantém compat total.
+ *
+ * Cada token tem par claro (:root) e escuro ([data-theme="dark"]).
+ * Os utilitários do Tailwind consomem os tokens via @theme inline em
+ * globals.css.
+ */
+
+:root {
+  /* ===================================================================
+   * 1) PRIMITIVOS
+   * ===================================================================
+   * Estes valores são imutáveis pelo tema — eles SÃO a paleta.
+   * Light e dark escolhem qual primitivo usar em cada semântica
+   * (vide blocos abaixo).
+   */
+
+  /* Brand primary (azul marinho) */
+  --color-primary-50:  #c5d8f8;  /* surface */
+  --color-primary-100: #c5d8f8;  /* lighter */
+  --color-primary-300: #1a5eb8;  /* light  */
+  --color-primary-500: #032d6f;  /* base   */
+  --color-primary-600: #043a8e;  /* hover  */
+  --color-primary-700: #021e4a;  /* active */
+
+  /* Brand secondary (vermelho) */
+  --color-secondary-50:  #fff0f0;  /* surface */
+  --color-secondary-100: #fbc5c5;  /* lighter */
+  --color-secondary-300: #d10606;  /* light  */
+  --color-secondary-500: #a60404;  /* base   */
+  --color-secondary-600: #c20505;  /* hover  */
+  --color-secondary-700: #7a0303;  /* active */
+
+  /* Semânticas — versões claras (-surface) e tons médios (-light) */
+  --color-success-50:  #dcfce7;
+  --color-success-300: #22c55e;
+  --color-success-500: #15803d;
+
+  --color-warning-50:  #fef3c7;
+  --color-warning-300: #f59e0b;
+  --color-warning-500: #b45309;
+
+  --color-danger-50:  #fee2e2;
+  --color-danger-500: #dc2626;
+  --color-danger-700: #b91c1c;
+
+  --color-info-50:  #e0f2fe;
+  --color-info-300: #0ea5e9;
+  --color-info-500: #0369a1;
+
+  /* Neutros */
+  --color-white: #ffffff;
+  --color-black: #0d0d0d;
+  --gray-50:  #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* ===================================================================
+   * 2) SEMÂNTICAS DE BRAND
+   * ===================================================================
+   * Use estas em componentes que pintam "da cor da marca" — botões
+   * primários, links de marca, destaques. Mudar a base muda tudo
+   * automaticamente.
+   */
+  --color-primary:         var(--color-primary-500);
+  --color-primary-hover:   var(--color-primary-600);
+  --color-primary-active:  var(--color-primary-700);
+  --color-primary-light:   var(--color-primary-300);
+  --color-primary-lighter: var(--color-primary-100);
+  --color-primary-surface: var(--color-primary-50);
+
+  --color-secondary:         var(--color-secondary-500);
+  --color-secondary-hover:   var(--color-secondary-600);
+  --color-secondary-active:  var(--color-secondary-700);
+  --color-secondary-light:   var(--color-secondary-300);
+  --color-secondary-lighter: var(--color-secondary-100);
+  --color-secondary-surface: var(--color-secondary-50);
+
+  /* ===================================================================
+   * 3) SEMÂNTICAS DE UI
+   * ===================================================================
+   * O app inteiro consome estes nomes. Mudar valor aqui = mudar app
+   * inteiro consistente.
+   */
+
+  /* Cores de fundo — mesmo padrão do sistema irmão:
+     - "primary" é o body (cinza-clarinho); cards se destacam em branco.
+     - "secondary" é a superfície dos cards (branco), e
+     - "tertiary" é um cinza médio para zonas internas. */
+  --color-background-primary:   var(--gray-50);
+  --color-background-secondary: var(--color-white);
+  --color-background-tertiary:  var(--gray-100);
+
+  /* Cores de texto */
+  --color-text-primary:   var(--gray-900);
+  --color-text-secondary: var(--gray-600);
+  --color-text-tertiary:  var(--gray-500);
+  --color-text-inverse:   var(--color-white);
+
+  /* Semânticas (light variant adicional p/ ícones, surface p/ fundos) */
+  --color-success:         var(--color-success-500);
+  --color-success-light:   var(--color-success-300);
+  --color-success-surface: var(--color-success-50);
+
+  --color-warning:         var(--color-warning-500);
+  --color-warning-light:   var(--color-warning-300);
+  --color-warning-surface: var(--color-warning-50);
+
+  --color-danger:          var(--color-danger-500);
+  --color-danger-hover:    var(--color-danger-700);
+  --color-danger-surface:  var(--color-danger-50);
+
+  --color-info:            var(--color-info-500);
+  --color-info-light:      var(--color-info-300);
+  --color-info-surface:    var(--color-info-50);
+
+  /* Aliases legados: o app usava "-bg" antes. Mantemos como sinônimo
+     de "-surface" para não quebrar nenhuma classe existente. */
+  --color-success-bg: var(--color-success-surface);
+  --color-warning-bg: var(--color-warning-surface);
+  --color-danger-bg:  var(--color-danger-surface);
+  --color-info-bg:    var(--color-info-surface);
+
+  /* ===================================================================
+   * 4) ACENTOS DO DASHBOARD DO ALUNO
+   * ===================================================================
+   * Camada semântica POR FUNÇÃO usada SOMENTE como acento (ícone + chip
+   * translúcido). NÃO substitui a primária; convive com ela. Não usar
+   * fora do dashboard — pra qualquer outra tela siga primary/success.
+   *
+   * Cada acento tem `--color-accent-<funcao>` (ícone) e
+   * `--color-accent-<funcao>-surface` (chip ~12-18% opacidade).
+   * Valores aqui (light) são calibrados pra contraste >=3:1 em fundo
+   * branco/cinza-claro; valores dark vivem no bloco [data-theme="dark"].
+   */
+  --color-accent-xp:                    #b47b00;
+  --color-accent-xp-surface:            rgba(180, 123, 0, 0.12);
+  --color-accent-streak:                #c24a1a;
+  --color-accent-streak-surface:        rgba(194, 74, 26, 0.12);
+  --color-accent-streak-record:         #4f45c9;
+  --color-accent-streak-record-surface: rgba(79, 69, 201, 0.12);
+  --color-accent-review:                #0e8a8e;
+  --color-accent-review-surface:        rgba(14, 138, 142, 0.12);
+  --color-accent-achievement:           #b0376a;
+  --color-accent-achievement-surface:   rgba(176, 55, 106, 0.12);
+  --color-accent-progress:              #1f8a3a;
+  --color-accent-progress-surface:      rgba(31, 138, 58, 0.14);
+
+  /* ===================================================================
+   * 5) ELEVAÇÃO DE SUPERFÍCIE — GLOBAL
+   * ===================================================================
+   * Escala de PROFUNDIDADE (eixo Z) aplicada em TODO o app (aluno,
+   * professor, admin). Convive com as superfícies UI tradicionais
+   * (--color-background-*), que continuam servindo para campos, chips
+   * internos, etc. — não substitui.
+   *
+   *   surface-page     — fundo da página (chrome do body)
+   *   surface-card     — card padrão (default do componente <Card />)
+   *   surface-elevated — card herói (ação primária)
+   *
+   *   shadow-card      — sombra de pouso do card padrão (light: 2 camadas
+   *                       reais; dark: filete interno de luz pra simular
+   *                       a borda iluminada superior. NUNCA sombra escura
+   *                       no dark — fica invisível ou suja.)
+   *   shadow-elevated  — versão "mais alta" do shadow-card.
+   */
+  --surface-page:     #ededed;
+  --surface-card:     #ffffff;
+  --surface-elevated: #ffffff;
+  --shadow-card:      0 1px 3px rgba(16, 24, 40, 0.06),
+                      0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-elevated:  0 4px 16px rgba(16, 24, 40, 0.08);
+
+  /* Bordas */
+  --color-border-primary:   var(--gray-200);
+  --color-border-secondary: var(--gray-300);
+
+  /* Tipografia
+     `--font-inter` é injetada pelo next/font no <html> em layout.tsx;
+     stack tem fallback system-ui caso a fonte do Google ainda não
+     tenha baixado. Mesma pilha do sistema irmão. */
+  --font-family-sans:
+    var(--font-inter, "Inter"), system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --font-family-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Raio de borda */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /*
+   * Espaçamento — escala consistente para padding/gap/margin.
+   * Usar via classes Tailwind (gap-3 = 0.75rem) ou diretamente
+   * com var(--space-N). Quatro tamanhos cobrem 95% dos casos.
+   */
+  --space-1: 0.25rem;  /* 4px  — micro (gaps internos de chips) */
+  --space-2: 0.5rem;   /* 8px  — small (entre ícone e label)  */
+  --space-3: 0.75rem;  /* 12px — entre itens próximos          */
+  --space-4: 1rem;     /* 16px — base                          */
+  --space-6: 1.5rem;   /* 24px — entre seções                  */
+  --space-8: 2rem;     /* 32px — entre blocos maiores          */
+
+  /*
+   * Elevação — 3 níveis cobrem todo o app. Sombra clara, sem cor
+   * extravagante. No tema escuro as sombras são mais escuras
+   * (ver bloco [data-theme="dark"]).
+   *   1: card interativo em hover, dropdown menu.
+   *   2: card "acento" SRS, toasts.
+   *   3: dialogs (modal).
+   */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-2: 0 4px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
+}
+
+/* ===================================================================
+ * Tema escuro
+ * ===================================================================
+ * Trocamos QUAL primitivo cada semântica usa — os primitivos em si
+ * NUNCA mudam (light pode olhar para dark e vice-versa).
+ *
+ * Para brand no dark: deslocamos um passo "mais claro" (o azul fica
+ * legível em fundo escuro usando primary-300 como base) e movemos o
+ * "surface" para uma versão sombreada da marca.
+ */
+[data-theme="dark"] {
+  /* Escala de cinzas no dark — INVERTE para tons azulados, idênticos
+     ao sistema irmão (mais elegante que cinza puro: integra com a
+     marca azul-marinho da escola). */
+  --gray-50:  #0f1520;
+  --gray-100: #19202f;
+  --gray-200: #232d44;
+  --gray-300: #2f3d5a;
+  --gray-400: #9AA3B2;
+  --gray-500: #7d93b8;
+  --gray-600: #9db3d3;
+  --gray-700: #c0d0e8;
+  --gray-800: #dbe6f5;
+  --gray-900: #edf3fc;
+
+  /* Body fica no tom mais escuro; cards/topbar/modais um passo
+     acima para destacar; zonas internas dois passos acima. */
+  --color-background-primary:   var(--gray-50);
+  --color-background-secondary: var(--gray-100);
+  --color-background-tertiary:  var(--gray-200);
+
+  --color-text-primary:   var(--gray-900);
+  --color-text-secondary: var(--gray-600);
+  --color-text-tertiary:  var(--gray-400);
+  --color-text-inverse:   var(--gray-50);
+
+  --color-border-primary:   var(--gray-200);
+  --color-border-secondary: var(--gray-300);
+
+  /* Brand: usa o tom MAIS claro como cor "base" (visível em fundo
+     escuro), e re-deriva hover/active a partir dele. O surface vira
+     uma sombra translúcida da marca para não brilhar branco no dark. */
+  --color-primary:         var(--color-primary-300);
+  --color-primary-hover:   #3a7dd1;
+  --color-primary-active:  var(--color-primary-100);
+  --color-primary-light:   var(--color-primary-100);
+  --color-primary-lighter: rgba(26, 94, 184, 0.35);
+  --color-primary-surface: rgba(3, 45, 111, 0.30);
+
+  --color-secondary:         var(--color-secondary-300);
+  --color-secondary-hover:   #e64545;
+  --color-secondary-active:  var(--color-secondary-100);
+  --color-secondary-light:   var(--color-secondary-100);
+  --color-secondary-lighter: rgba(209, 6, 6, 0.30);
+  --color-secondary-surface: rgba(166, 4, 4, 0.25);
+
+  /* Semânticas: light variant vira a "cor visível", surface vira um
+     fundo sutil sombreado (sem clarear o card). */
+  --color-success:         var(--color-success-300);
+  --color-success-light:   var(--color-success-300);
+  --color-success-surface: rgba(34, 197, 94, 0.18);
+
+  --color-warning:         var(--color-warning-300);
+  --color-warning-light:   var(--color-warning-300);
+  --color-warning-surface: rgba(245, 158, 11, 0.18);
+
+  /* Danger no dark: mantemos o vermelho profundo (não clareamos como em
+     success/warning/info), para botões críticos como "Sair" e "Excluir"
+     continuarem reconhecíveis e impactantes — texto branco em vermelho
+     forte. Surface continua translúcido para alertas. */
+  --color-danger:          var(--color-danger-500);
+  --color-danger-hover:    var(--color-danger-700);
+  --color-danger-surface:  rgba(220, 38, 38, 0.20);
+
+  --color-info:            var(--color-info-300);
+  --color-info-light:      var(--color-info-300);
+  --color-info-surface:    rgba(14, 165, 233, 0.18);
+
+  /* Aliases legados continuam apontando para surface. */
+  --color-success-bg: var(--color-success-surface);
+  --color-warning-bg: var(--color-warning-surface);
+  --color-danger-bg:  var(--color-danger-surface);
+  --color-info-bg:    var(--color-info-surface);
+
+  /* Acentos do dashboard do aluno — versões DARK calibradas
+     conforme spec (passam contraste >=3:1 em fundo escuro ~#0f1520).
+     Chip surface a ~16-18% de opacidade pra realçar sem encher. */
+  --color-accent-xp:                    #f5b544;
+  --color-accent-xp-surface:            rgba(245, 181, 68, 0.16);
+  --color-accent-streak:                #f97347;
+  --color-accent-streak-surface:        rgba(249, 115, 71, 0.16);
+  --color-accent-streak-record:         #8b85f0;
+  --color-accent-streak-record-surface: rgba(139, 133, 240, 0.16);
+  --color-accent-review:                #34c3c9;
+  --color-accent-review-surface:        rgba(52, 195, 201, 0.16);
+  --color-accent-achievement:           #e86a93;
+  --color-accent-achievement-surface:   rgba(232, 106, 147, 0.16);
+  --color-accent-progress:              #46b958;
+  --color-accent-progress-surface:      rgba(70, 185, 88, 0.18);
+
+  /* Elevação de superfície — DARK (ver §5).
+     No dark NÃO usamos sombra externa (fica invisível ou suja). O efeito
+     vem do degrau de valor (page → card → elevated, cada um mais claro
+     que o anterior) + um filete inset de luz no topo simulando borda
+     iluminada. As variáveis shadow-card / shadow-elevated viram inset
+     box-shadows aqui no escuro. */
+  --surface-page:     #13151D;
+  --surface-card:     #1E212C;
+  --surface-elevated: #2A2F3D;
+  --shadow-card:      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-elevated:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* Sombras mais densas no dark para ter elevação perceptível. */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.45);
+}

@@ -1,0 +1,330 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/*
+ * Ponte tokens -> Tailwind v4.
+ * `@theme inline` registra cada cor/raio/fonte no namespace do Tailwind sem
+ * "congelar" o valor: os utilitários geram `var(--color-...)`, então a troca
+ * light/dark feita em tokens.css ([data-theme]) reflete automaticamente.
+ * Resultado: classes como bg-bg-primary, text-fg-primary, border-border-primary,
+ * bg-success, rounded-md, font-sans.
+ */
+@theme inline {
+  --color-bg-primary: var(--color-background-primary);
+  --color-bg-secondary: var(--color-background-secondary);
+  --color-bg-tertiary: var(--color-background-tertiary);
+
+  --color-fg-primary: var(--color-text-primary);
+  --color-fg-secondary: var(--color-text-secondary);
+  --color-fg-tertiary: var(--color-text-tertiary);
+  --color-fg-inverse: var(--color-text-inverse);
+
+  /* Brand — disponíveis como bg-primary-brand, text-primary-brand, etc.
+     Usamos sufixo "-brand" para não colidir com bg-primary (que já é o
+     fundo principal do app). */
+  --color-primary-brand:         var(--color-primary);
+  --color-primary-brand-hover:   var(--color-primary-hover);
+  --color-primary-brand-active:  var(--color-primary-active);
+  --color-primary-brand-light:   var(--color-primary-light);
+  --color-primary-brand-lighter: var(--color-primary-lighter);
+  --color-primary-brand-surface: var(--color-primary-surface);
+
+  --color-secondary-brand:         var(--color-secondary);
+  --color-secondary-brand-hover:   var(--color-secondary-hover);
+  --color-secondary-brand-active:  var(--color-secondary-active);
+  --color-secondary-brand-light:   var(--color-secondary-light);
+  --color-secondary-brand-lighter: var(--color-secondary-lighter);
+  --color-secondary-brand-surface: var(--color-secondary-surface);
+
+  /* Semânticas */
+  --color-success: var(--color-success);
+  --color-success-light: var(--color-success-light);
+  --color-success-surface: var(--color-success-surface);
+  --color-success-bg: var(--color-success-bg);
+
+  --color-warning: var(--color-warning);
+  --color-warning-light: var(--color-warning-light);
+  --color-warning-surface: var(--color-warning-surface);
+  --color-warning-bg: var(--color-warning-bg);
+
+  --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-surface: var(--color-danger-surface);
+  --color-danger-bg: var(--color-danger-bg);
+
+  --color-info: var(--color-info);
+  --color-info-light: var(--color-info-light);
+  --color-info-surface: var(--color-info-surface);
+  --color-info-bg: var(--color-info-bg);
+
+  --color-border-primary: var(--color-border-primary);
+  --color-border-secondary: var(--color-border-secondary);
+
+  /* Acentos do dashboard do aluno — ver tokens.css §4.
+     Disponíveis como text-accent-xp, bg-accent-xp-surface, etc. */
+  --color-accent-xp:                    var(--color-accent-xp);
+  --color-accent-xp-surface:            var(--color-accent-xp-surface);
+  --color-accent-streak:                var(--color-accent-streak);
+  --color-accent-streak-surface:        var(--color-accent-streak-surface);
+  --color-accent-streak-record:         var(--color-accent-streak-record);
+  --color-accent-streak-record-surface: var(--color-accent-streak-record-surface);
+  --color-accent-review:                var(--color-accent-review);
+  --color-accent-review-surface:        var(--color-accent-review-surface);
+  --color-accent-achievement:           var(--color-accent-achievement);
+  --color-accent-achievement-surface:   var(--color-accent-achievement-surface);
+  --color-accent-progress:              var(--color-accent-progress);
+  --color-accent-progress-surface:      var(--color-accent-progress-surface);
+
+  /* Elevação de superfície do dashboard do aluno — ver tokens.css §5.
+     Disponíveis como bg-surface-page, bg-surface-card, bg-surface-elevated,
+     shadow-card, shadow-elevated. */
+  --color-surface-page:     var(--surface-page);
+  --color-surface-card:     var(--surface-card);
+  --color-surface-elevated: var(--surface-elevated);
+  --shadow-card:            var(--shadow-card);
+  --shadow-elevated:        var(--shadow-elevated);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+
+  /* Shadows: registramos como utility (shadow-1/2/3). */
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+}
+
+@layer base {
+  body {
+    /* Chrome de PÁGINA (degrau abaixo dos cards). Em conjunto com o
+       default do Card (bg-surface-card + shadow-card), garante a
+       escala de profundidade page < card < elevated em todo o app.
+       Auth pages (login, etc.) pintam seu próprio fundo full-bleed. */
+    background-color: var(--surface-page);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-sans);
+    /* Tipografia base: rendering mais nítido em telas modernas. */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * Animação ao alternar tema. O ThemeProvider adiciona a classe
+   * `theme-transitioning` no <html> por um curto período em volta da
+   * troca; só durante essa janela todos os elementos animam cor/borda.
+   * Isso evita interferir com transições existentes de hover/focus.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html.theme-transitioning,
+    html.theme-transitioning *,
+    html.theme-transitioning *::before,
+    html.theme-transitioning *::after {
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease,
+        color 250ms ease,
+        fill 250ms ease,
+        stroke 250ms ease !important;
+      transition-delay: 0s !important;
+    }
+  }
+
+  /* Hierarquia tipográfica refinada: pesos e tracking distintos para
+     ajudar o scan visual. As classes existentes (text-2xl, text-base)
+     continuam definindo tamanho — aqui só ajustamos detalhes. */
+  h1 {
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    letter-spacing: -0.015em;
+  }
+  h3,
+  h4 {
+    letter-spacing: -0.01em;
+  }
+}
+
+/*
+ * Animações utilitárias.
+ *  - .animate-fade-slide-in:   entrada padrão de cards e listas.
+ *  - .animate-toast-in/-out:   ciclo de vida do toast.
+ *
+ * Tudo gated em `prefers-reduced-motion: no-preference` para respeitar
+ * usuários que pediram menos movimento.
+ */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Estilos do editor TipTap (rich text) — escopo .tiptap aplicado pelo
+   próprio EditorContent. Renderiza HTML salvo nos blocos rich_text
+   também via RichTextBlock (com a mesma classe para consistência). */
+.tiptap p {
+  margin: 0 0 0.5em 0;
+}
+.tiptap p:last-child {
+  margin-bottom: 0;
+}
+.tiptap h2,
+.tiptap h3 {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.015em;
+  margin: 0.6em 0 0.3em 0;
+}
+.tiptap h2 {
+  font-size: 1.125rem;
+}
+.tiptap h3 {
+  font-size: 1rem;
+}
+.tiptap ul,
+.tiptap ol {
+  margin: 0.3em 0 0.6em 1.5em;
+}
+.tiptap ul {
+  list-style: disc;
+}
+.tiptap ol {
+  list-style: decimal;
+}
+.tiptap blockquote {
+  border-left: 3px solid var(--color-border-secondary);
+  padding-left: 0.75rem;
+  margin: 0.5em 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.tiptap strong {
+  font-weight: 600;
+}
+.tiptap em {
+  font-style: italic;
+}
+.tiptap u {
+  text-decoration: underline;
+}
+/* Placeholder vazio (mostra "data-placeholder" do attrs quando o editor
+   está sem conteúdo). */
+.tiptap.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-tertiary);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Formas flutuantes do fundo do login — mesmo movimento do sistema
+   irmão (Mr. Dave Idiomas — Sistema de Gestão). Duas curvas em
+   contrapasso dão a sensação de "respiração". */
+@keyframes loginFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-24px) rotate(6deg); }
+}
+@keyframes loginFloatReverse {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(20px) rotate(-5deg); }
+}
+@keyframes loginSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes celebrationConfetti {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(160px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Troféu da tela de conclusão de lição — entra com pop + leve oscilação. */
+@keyframes trophyPop {
+  0%   { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  55%  { transform: scale(1.15) rotate(6deg); opacity: 1; }
+  75%  { transform: scale(0.95) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-slide-in {
+    /* `backwards` aplica o estado inicial mesmo com animation-delay > 0
+       (evita flash em itens com stagger). */
+    animation: fadeSlideIn 320ms ease-out backwards;
+  }
+  .animate-toast-in {
+    animation: toastIn 200ms ease-out backwards;
+  }
+  .animate-toast-out {
+    animation: toastOut 180ms ease-in forwards;
+  }
+  .animate-skeleton-shimmer {
+    animation: skeletonShimmer 1500ms ease-in-out infinite;
+  }
+  .animate-confetti {
+    animation: celebrationConfetti 1200ms ease-out forwards;
+  }
+  .animate-trophy-pop {
+    animation: trophyPop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  .animate-login-float {
+    animation: loginFloat 8s ease-in-out infinite;
+  }
+  .animate-login-float-reverse {
+    animation: loginFloatReverse 10s ease-in-out infinite;
+  }
+  .animate-login-float-slow {
+    animation: loginFloat 12s ease-in-out infinite 3s;
+  }
+  .animate-login-slide-up {
+    animation: loginSlideUp 400ms ease backwards;
+  }
+}
