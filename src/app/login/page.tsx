@@ -11,9 +11,9 @@ import { initialAuthState } from "@/lib/auth/types";
 //
 // Layout:
 //   Desktop (md+): split 50/50.
-//     - Esquerda: hero visual. Tenta carregar /login/hero.jpg; se não
-//       existir (ou falhar), cai em um fallback com as cores da marca
-//       + logo + tagline (gracioso, nunca quebrado).
+//     - Esquerda: painel de marca fixo — gradiente da marca + formas
+//       flutuantes + logo + tagline. Sem imagem externa: nada a carregar,
+//       nada a falhar, nada de ícone quebrado.
 //     - Direita: form de login, campos maiores, copy acolhedora.
 //   Mobile: só o form (esquerda escondida), com logo da escola no topo.
 //
@@ -35,15 +35,12 @@ export default function LoginPage() {
     initialAuthState,
   );
   const [showPassword, setShowPassword] = useState(false);
-  // Hero image: se /login/hero.jpg não existir ou falhar, escondemos o
-  // <img> e o fallback (gradiente + logo + tagline) fica visível.
-  const [heroFailed, setHeroFailed] = useState(false);
 
   const year = new Date().getFullYear();
 
   return (
     <main className="flex min-h-dvh w-full bg-bg-primary">
-      {/* ============= ESQUERDA (desktop) — hero ============= */}
+      {/* ======= ESQUERDA (desktop) — painel de marca ======= */}
       <aside
         aria-hidden="true"
         className="relative hidden overflow-hidden md:flex md:w-1/2 lg:w-3/5"
@@ -52,64 +49,43 @@ export default function LoginPage() {
             "linear-gradient(135deg, var(--color-primary-700) 0%, #051f50 55%, #0a0a1a 100%)",
         }}
       >
-        {/* Hero image (opcional). Se /login/hero.jpg estiver presente,
-            cobre o gradient. Em qualquer falha, escondemos e o fallback
-            estiloso fica visível. */}
-        {!heroFailed && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/login/hero.jpg"
-            alt=""
-            onError={() => setHeroFailed(true)}
-            className="absolute inset-0 h-full w-full object-cover"
-            draggable={false}
-          />
-        )}
-
-        {/* Scrim de legibilidade — só quando há imagem real. */}
-        {!heroFailed && (
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/30 to-black/10" />
-        )}
-
-        {/* Formas flutuantes — só no fallback (sem imagem). Dão
+        {/* Formas flutuantes — parte fixa do painel de marca. Dão
             respiração à tela e remetem ao sistema irmão. */}
-        {heroFailed && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 overflow-hidden"
-          >
-            <span
-              className="animate-login-float absolute h-[520px] w-[520px] rounded-full opacity-[0.14]"
-              style={{
-                background:
-                  "radial-gradient(circle, var(--color-primary-light), transparent 70%)",
-                top: "-160px",
-                right: "-120px",
-              }}
-            />
-            <span
-              className="animate-login-float-reverse absolute h-[400px] w-[400px] rounded-full opacity-[0.14]"
-              style={{
-                background:
-                  "radial-gradient(circle, var(--color-secondary), transparent 70%)",
-                bottom: "-120px",
-                left: "-80px",
-              }}
-            />
-            <span
-              className="animate-login-float-slow absolute h-[280px] w-[280px] rounded-full opacity-[0.12]"
-              style={{
-                background:
-                  "radial-gradient(circle, #4a90e2, transparent 70%)",
-                top: "45%",
-                left: "15%",
-              }}
-            />
-          </div>
-        )}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
+          <span
+            className="animate-login-float absolute h-[520px] w-[520px] rounded-full opacity-[0.14]"
+            style={{
+              background:
+                "radial-gradient(circle, var(--color-primary-light), transparent 70%)",
+              top: "-160px",
+              right: "-120px",
+            }}
+          />
+          <span
+            className="animate-login-float-reverse absolute h-[400px] w-[400px] rounded-full opacity-[0.14]"
+            style={{
+              background:
+                "radial-gradient(circle, var(--color-secondary), transparent 70%)",
+              bottom: "-120px",
+              left: "-80px",
+            }}
+          />
+          <span
+            className="animate-login-float-slow absolute h-[280px] w-[280px] rounded-full opacity-[0.12]"
+            style={{
+              background:
+                "radial-gradient(circle, #4a90e2, transparent 70%)",
+              top: "45%",
+              left: "15%",
+            }}
+          />
+        </div>
 
-        {/* Conteúdo overlay — logo + tagline. Sempre visível, sobre a
-            imagem (com scrim) ou sobre o gradient/formas. */}
+        {/* Conteúdo principal — logo + tagline. Fixo, sobre o
+            gradiente da marca e as formas flutuantes. */}
         <div className="relative z-10 m-auto flex max-w-md flex-col items-center gap-6 px-10 text-center text-white">
           <Logo
             className="h-24 w-24 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.30)]"
