@@ -72,6 +72,16 @@ export const imageData = z.object({
   width: z.enum(["small", "medium", "full"]).optional(),
 });
 
+// PDF: arquivo no bucket `lesson-pdfs` do Storage (upload pelo admin).
+// `url` é a URL pública do arquivo; `filename` é o nome original, usado no
+// preview e para nomear o download. `caption` aparece abaixo do preview.
+export const pdfData = z.object({
+  title: z.string().optional(),
+  url: z.string().min(1),
+  filename: z.string().optional(),
+  caption: z.string().optional(),
+});
+
 // Exemplos: frases de exemplo (frequentemente atreladas a um vocabulário
 // ou tópico gramatical), cada uma com tradução opcional e botão de áudio.
 // Diferente de pronunciation, aqui o foco é entender o significado — a
@@ -212,6 +222,7 @@ export type PronunciationData = z.infer<typeof pronunciationData>;
 export type ExamplesData = z.infer<typeof examplesData>;
 export type TableData = z.infer<typeof tableData>;
 export type ImageData = z.infer<typeof imageData>;
+export type PdfData = z.infer<typeof pdfData>;
 export type SpeakingData = z.infer<typeof speakingData>;
 export type MultipleChoiceData = z.infer<typeof multipleChoiceData>;
 export type FillBlankData = z.infer<typeof fillBlankData>;
@@ -228,6 +239,7 @@ export const BLOCK_SCHEMAS = {
   examples: examplesData,
   table: tableData,
   image: imageData,
+  pdf: pdfData,
   speaking: speakingData,
   multiple_choice: multipleChoiceData,
   fill_blank: fillBlankData,

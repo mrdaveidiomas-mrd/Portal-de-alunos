@@ -487,6 +487,16 @@ function buildBlockData(type: string, formData: FormData): {
         solution: null,
       };
     }
+    case "pdf":
+      return {
+        data: {
+          title: str(formData, "title") || undefined,
+          url: str(formData, "url"),
+          filename: str(formData, "filename") || undefined,
+          caption: str(formData, "caption") || undefined,
+        },
+        solution: null,
+      };
     case "examples":
       return {
         data: {

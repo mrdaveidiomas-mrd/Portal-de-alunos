@@ -7,6 +7,7 @@ import {
   TYPE_LABEL,
 } from "@/components/admin/block-types";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import { PdfUploadField } from "@/components/admin/PdfUploadField";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TableGridEditor } from "@/components/admin/TableGridEditor";
 import { updateBlock } from "@/lib/admin/actions";
@@ -36,6 +37,8 @@ export interface BlockInitial {
   alt?: string;
   caption?: string;
   width?: string;
+  // pdf (compartilha url/caption com image)
+  filename?: string;
 }
 
 const inputCls =
@@ -189,6 +192,17 @@ export function BlockForm({
           initialAlt={initial.alt}
           initialCaption={initial.caption}
           initialWidth={initial.width}
+          onUpdate={handleFormChange}
+          onFlush={flushSave}
+        />
+      )}
+
+      {type === "pdf" && (
+        <PdfUploadField
+          courseId={courseId}
+          initialUrl={initial.url}
+          initialFilename={initial.filename}
+          initialCaption={initial.caption}
           onUpdate={handleFormChange}
           onFlush={flushSave}
         />

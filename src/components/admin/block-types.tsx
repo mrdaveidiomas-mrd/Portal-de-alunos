@@ -24,6 +24,7 @@ export const CONTENT_TYPES: BlockTypeEntry[] = [
   { value: "speaking", label: "Speaking (falar)", description: "Aluno fala e o sistema corrige.", icon: <IconSpeaking /> },
   { value: "table", label: "Tabela", description: "Grade de linhas e colunas.", icon: <IconTable /> },
   { value: "image", label: "Imagem", description: "Imagem com legenda.", icon: <IconImage /> },
+  { value: "pdf", label: "PDF", description: "Anexe um arquivo PDF.", icon: <IconPdf /> },
 ];
 
 export const EXERCISE_TYPES_PICKER: BlockTypeEntry[] = [
@@ -143,6 +144,18 @@ function IconImage() {
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <circle cx="8.5" cy="9.5" r="1.5" />
       <path d="m21 16-5-5L5 20" />
+    </svg>
+  );
+}
+
+function IconPdf() {
+  // Folha de documento com dobra + rótulo "PDF".
+  return (
+    <svg {...svgProps()}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M8.5 13.5h1a1.5 1.5 0 0 1 0 3h-1zM8.5 16.5v-3" />
+      <path d="M14.5 13.5h2M14.5 13.5v3M14.5 15h1.5" />
     </svg>
   );
 }

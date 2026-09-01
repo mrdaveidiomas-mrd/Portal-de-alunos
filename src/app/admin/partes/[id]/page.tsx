@@ -17,6 +17,7 @@ import {
   errorCorrectionSolution,
   examplesData,
   imageData,
+  pdfData,
   pronunciationData,
   readingData,
   reorderWordsData,
@@ -90,6 +91,17 @@ function toInitial(
             alt: p.data.alt,
             caption: p.data.caption ?? "",
             width: p.data.width ?? "full",
+          }
+        : {};
+    }
+    case "pdf": {
+      const p = pdfData.safeParse(data);
+      return p.success
+        ? {
+            title: p.data.title ?? "",
+            url: p.data.url,
+            filename: p.data.filename ?? "",
+            caption: p.data.caption ?? "",
           }
         : {};
     }
