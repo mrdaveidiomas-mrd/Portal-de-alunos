@@ -210,6 +210,14 @@
 .tiptap p:last-child {
   margin-bottom: 0;
 }
+/* Linha em branco intencional (parágrafo vazio criado com Enter) preserva
+   altura no RENDER do aluno. Sem isto, <p></p> colapsa e a linha some — o
+   admin a vê no editor (ProseMirror segura a altura), mas o aluno não.
+   Escopado com :not(.ProseMirror) para não interferir no editor nem no
+   placeholder de "campo vazio". */
+.tiptap:not(.ProseMirror) p:empty::before {
+  content: "\00a0"; /* espaço não-quebrável — dá altura de uma linha */
+}
 .tiptap h2,
 .tiptap h3 {
   font-weight: 600;
