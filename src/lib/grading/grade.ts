@@ -93,16 +93,17 @@ export function gradeErrorCorrection(
 }
 
 // Reordenar palavras: aluno envia array de índices originais na ordem em que
-// montou a frase. Ordem canônica = identidade [0,1,...,n-1] (admin escreve
-// os tokens já na ordem certa; o cliente embaralha para exibir).
+// montou a frase; o admin escreve os tokens já na ordem certa e o cliente
+// embaralha para exibir. Compara as PALAVRAS, não os índices: em "the cat and
+// the dog", trocar os dois "the" monta a mesma frase e está certo.
 // Sem "close": ou montou certo, ou não.
 export function gradeReorderWords(
   selectedIndices: number[],
-  tokenCount: number,
+  tokens: string[],
 ): GradeState {
-  if (selectedIndices.length !== tokenCount) return "incorrect";
-  for (let i = 0; i < tokenCount; i++) {
-    if (selectedIndices[i] !== i) return "incorrect";
-  }
-  return "perfect";
+  if (selectedIndices.length !== tokens.length) return "incorrect";
+  if (new Set(selectedIndices).size !== tokens.length) return "incorrect";
+  return selectedIndices.every((original, i) => tokens[original] === tokens[i])
+    ? "perfect"
+    : "incorrect";
 }

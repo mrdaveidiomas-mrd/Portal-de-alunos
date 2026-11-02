@@ -128,7 +128,11 @@ export async function submitExercise(raw: {
     .select("solution")
     .eq("block_id", blockId)
     .maybeSingle();
-  if (!solutionRow) return fail("Exercício sem gabarito configurado.");
+  // reorder_words não tem gabarito separado: a ordem certa é a de data.tokens.
+  if (!solutionRow && block.type !== "reorder_words") {
+    return fail("Exercício sem gabarito configurado.");
+  }
+  const solution = solutionRow?.solution;
 
   // --- Correção (server-side; o gabarito nunca sai daqui) ---
   let state: GradeState;
@@ -139,7 +143,7 @@ export async function submitExercise(raw: {
   let srsAnswer = "";
 
   if (block.type === "multiple_choice") {
-    const sol = multipleChoiceSolution.safeParse(solutionRow.solution);
+    const sol = multipleChoiceSolution.safeParse(solution);
     const pub = multipleChoiceData.safeParse(block.data);
     if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
     if (typeof selectedIndex !== "number") return fail("Selecione uma opção.");
@@ -149,7 +153,7 @@ export async function submitExercise(raw: {
     srsAnswer = canonical;
     if (state === "incorrect") correctAnswer = canonical;
   } else if (block.type === "fill_blank") {
-    const sol = fillBlankSolution.safeParse(solutionRow.solution);
+    const sol = fillBlankSolution.safeParse(solution);
     const pub = fillBlankData.safeParse(block.data);
     if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
     if (typeof text !== "string" || text.trim().length === 0) {
@@ -160,7 +164,7 @@ export async function submitExercise(raw: {
     srsAnswer = sol.data.answer;
     if (state === "incorrect") correctAnswer = sol.data.answer;
   } else if (block.type === "translation") {
-    const sol = translationSolution.safeParse(solutionRow.solution);
+    const sol = translationSolution.safeParse(solution);
     const pub = translationData.safeParse(block.data);
     if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
     if (typeof text !== "string" || text.trim().length === 0) {
@@ -174,7 +178,7 @@ export async function submitExercise(raw: {
     srsAnswer = sol.data.answer;
     if (state === "incorrect") correctAnswer = sol.data.answer;
   } else if (block.type === "error_correction") {
-    const sol = errorCorrectionSolution.safeParse(solutionRow.solution);
+    const sol = errorCorrectionSolution.safeParse(solution);
     const pub = errorCorrectionData.safeParse(block.data);
     if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
     if (typeof text !== "string" || text.trim().length === 0) {
@@ -187,17 +191,19 @@ export async function submitExercise(raw: {
     srsAnswer = sol.data.answer;
     if (state === "incorrect") correctAnswer = sol.data.answer;
   } else if (block.type === "reorder_words") {
-    // reorder_words não usa exercise_solutions — a ordem canônica é a própria
-    // ordem dos tokens em block.data. O safeParse de solutionRow não é
-    // relevante aqui.
     const pub = reorderWordsData.safeParse(block.data);
     if (!pub.success) return fail("Exercício mal configurado.");
     if (!Array.isArray(selectedIndices)) {
       return fail("Monte a frase antes de enviar.");
     }
-    state = gradeReorderWords(selectedIndices, pub.data.tokens.length);
+    state = gradeReorderWords(selectedIndices, pub.data.tokens);
     const canonical = pub.data.tokens.join(" ");
-    srsQuestion = pub.data.instruction ?? "Reordene as palavras";
+    // A revisão é digitada: o cartão precisa mostrar as palavras, em ordem
+    // alfabética para não entregar a resposta.
+    const words = [...pub.data.tokens]
+      .sort((a, b) => a.localeCompare(b))
+      .join(" / ");
+    srsQuestion = `${pub.data.instruction ?? "Reordene as palavras"}: ${words}`;
     srsAnswer = canonical;
     if (state === "incorrect") correctAnswer = canonical;
   } else {
