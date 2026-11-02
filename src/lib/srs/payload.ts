@@ -1,6 +1,8 @@
 // Payloads serializados no campo srs_items.payload. Tipados aqui para que
 // a UI de revisão e os upserts compartilhem o mesmo formato.
 
+import type { PassageData } from "@/lib/blocks/schemas";
+
 export interface SrsExercisePayload {
   type: "exercise";
   kind: "multiple_choice" | "fill_blank";
@@ -9,6 +11,10 @@ export interface SrsExercisePayload {
   // Imagem da pergunta: sem ela, o enunciado pode não fazer sentido na revisão.
   imageUrl?: string;
   imageAlt?: string;
+  // Múltipla escolha: o aluno escolhe entre as alternativas em vez de digitar.
+  options?: string[];
+  // Texto base da pergunta, copiado para o cartão se bastar sozinho.
+  passage?: PassageData;
   partTitle?: string;
   courseTitle?: string;
 }

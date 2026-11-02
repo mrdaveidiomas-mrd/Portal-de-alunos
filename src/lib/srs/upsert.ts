@@ -27,6 +27,8 @@ export async function upsertExerciseSrsItem(
     answer: string;
     imageUrl?: string;
     imageAlt?: string;
+    options?: string[];
+    passage?: SrsExercisePayload["passage"];
     partTitle?: string;
     courseTitle?: string;
   },
@@ -38,6 +40,8 @@ export async function upsertExerciseSrsItem(
     answer: params.answer,
     imageUrl: params.imageUrl,
     imageAlt: params.imageAlt,
+    options: params.options,
+    passage: params.passage,
     partTitle: params.partTitle,
     courseTitle: params.courseTitle,
   };

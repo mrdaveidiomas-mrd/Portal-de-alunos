@@ -97,13 +97,19 @@ export async function reviewItem(
   // Grading por tipo:
   //  - speaking: `submitted` é a transcrição (voz ou texto-fallback);
   //    usa gradeSpeaking (tolerância maior — STT erra pontuação/homófonos).
+  //  - múltipla escolha com alternativas: comparação exata. Com tolerância,
+  //    "He go" seria "quase lá" quando a certa é "He goes".
   //  - demais: reusa a lógica do fill_blank (Levenshtein + normalização),
   //    só a resposta canônica (sem alternatives).
   const trimmed = (submitted ?? "").trim();
-  const state =
-    payload.type === "speaking"
-      ? gradeSpeaking(trimmed, expected)
-      : gradeFillBlank(trimmed, { answer: expected, alternatives: [] });
+  let state: GradeState;
+  if (payload.type === "speaking") {
+    state = gradeSpeaking(trimmed, expected);
+  } else if (payload.type === "exercise" && payload.options) {
+    state = trimmed === expected.trim() ? "perfect" : "incorrect";
+  } else {
+    state = gradeFillBlank(trimmed, { answer: expected, alternatives: [] });
+  }
   const quality = qualityFor(state);
 
   const next = applySm2(

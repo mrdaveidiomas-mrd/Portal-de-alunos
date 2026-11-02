@@ -12,6 +12,8 @@ import {
   fillBlankSolution,
   multipleChoiceData,
   multipleChoiceSolution,
+  passageData,
+  type PassageData,
   questionFieldsData,
   reorderWordsData,
   translationData,
@@ -141,6 +143,7 @@ export async function submitExercise(raw: {
   // e da resposta canônica de cada tipo.
   let srsQuestion = "";
   let srsAnswer = "";
+  let srsOptions: string[] | undefined;
 
   if (block.type === "multiple_choice") {
     const sol = multipleChoiceSolution.safeParse(solution);
@@ -151,6 +154,7 @@ export async function submitExercise(raw: {
     const canonical = pub.data.options[sol.data.answerIndex] ?? "";
     srsQuestion = pub.data.question;
     srsAnswer = canonical;
+    srsOptions = pub.data.options;
     if (state === "incorrect") correctAnswer = canonical;
   } else if (block.type === "fill_blank") {
     const sol = fillBlankSolution.safeParse(solution);
@@ -265,11 +269,11 @@ export async function submitExercise(raw: {
   }
 
   // SRS: erros e "quase lá" entram (ou voltam) para a fila de revisão.
-  // Pergunta de texto base fica de fora: a revisão mostra um cartão isolado, e
-  // a pergunta de interpretação não tem como ser respondida sem o texto.
-  const media = questionFieldsData.safeParse(block.data);
-  const linkedToPassage = media.success && Boolean(media.data.passageId);
-  if (state !== "perfect" && srsQuestion && srsAnswer && !linkedToPassage) {
+  if (state !== "perfect" && srsQuestion && srsAnswer) {
+    const media = questionFieldsData.safeParse(block.data);
+    const passage = media.success
+      ? await loadPassage(admin, block.part_id, media.data.passageId)
+      : undefined;
     await upsertExerciseSrsItem(admin, {
       userId: user.id,
       courseId: block.course_id,
@@ -279,6 +283,8 @@ export async function submitExercise(raw: {
       answer: srsAnswer,
       imageUrl: media.success ? media.data.imageUrl : undefined,
       imageAlt: media.success ? media.data.imageAlt : undefined,
+      options: srsOptions,
+      passage,
     });
   }
 
@@ -313,6 +319,24 @@ export async function submitExercise(raw: {
     partStars: justCompleted ? partStars : undefined,
     lessonJustCompleted,
   };
+}
+
+// Texto base da pergunta, para o cartão de revisão: sem ele, a pergunta de
+// interpretação não tem como ser respondida. Vínculo órfão vira undefined.
+async function loadPassage(
+  admin: AdminClient,
+  partId: string,
+  passageId: string | undefined,
+): Promise<PassageData | undefined> {
+  if (!passageId) return undefined;
+  const { data } = await admin
+    .from("blocks")
+    .select("data")
+    .eq("id", passageId)
+    .eq("part_id", partId)
+    .eq("type", "passage")
+    .maybeSingle();
+  return passageData.safeParse(data?.data).data;
 }
 
 // Para cada bloco de vocabulário da parte concluída, cria itens SRS para

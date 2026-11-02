@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { PassageBlock } from "@/components/blocks/PassageBlock";
 import { QuestionImage } from "@/components/blocks/QuestionImage";
 import { SpeakButton } from "@/components/blocks/SpeakButton";
 import { MicIcon } from "@/components/icons/MicIcon";
@@ -113,6 +114,9 @@ export function ReviewSession({ items: initialItems, speech }: Props) {
   }
 
   const isSpeaking = current.payload.type === "speaking";
+  // Itens antigos de múltipla escolha não têm alternativas: seguem digitados.
+  const options =
+    current.payload.type === "exercise" ? current.payload.options : undefined;
   const submitted = result !== null;
 
   // Núcleo de submissão — `value` é a resposta digitada OU a transcrição
@@ -152,6 +156,11 @@ export function ReviewSession({ items: initialItems, speech }: Props) {
       </div>
 
       <Card padded className="flex flex-col gap-3">
+        {current.payload.type === "exercise" && current.payload.passage && (
+          <div className="border-b border-border-primary pb-3">
+            <PassageBlock data={current.payload.passage} />
+          </div>
+        )}
         <div className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wide text-fg-tertiary">
             Pergunta
@@ -182,6 +191,26 @@ export function ReviewSession({ items: initialItems, speech }: Props) {
               disabled={pending || submitted}
               onValueChange={setAnswer}
             />
+          ) : options ? (
+            <div className="flex flex-col gap-2">
+              {options.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  disabled={pending || submitted}
+                  onClick={() => setAnswer(option)}
+                  aria-pressed={answer === option}
+                  className={cn(
+                    "rounded-md border px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed",
+                    answer === option
+                      ? "border-fg-primary bg-bg-secondary text-fg-primary"
+                      : "border-border-primary text-fg-secondary hover:bg-bg-secondary",
+                  )}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
           ) : (
             <form onSubmit={handleTextSubmit}>
               <Input
