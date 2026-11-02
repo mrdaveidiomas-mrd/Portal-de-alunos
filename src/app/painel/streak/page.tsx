@@ -8,6 +8,7 @@ import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getStreakData } from "@/lib/streak/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 function formatDate(iso: string): string {
@@ -22,9 +23,7 @@ function formatDate(iso: string): string {
 
 export default async function StreakPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   // 365 dias cobrem todos os marcos de meta (até 365) e dão fôlego para

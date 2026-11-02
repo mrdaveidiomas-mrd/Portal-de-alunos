@@ -5,6 +5,7 @@ import { XpHistoryChart } from "@/components/painel/XpHistoryChart";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { getXpBySource, getXpHistory } from "@/lib/xp/queries";
 
@@ -26,9 +27,7 @@ function prettyLabel(source: string, fallback: string): string {
 
 export default async function XpHistoryPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const [history, bySource] = await Promise.all([

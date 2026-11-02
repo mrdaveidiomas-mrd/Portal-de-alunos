@@ -3,16 +3,13 @@ import Link from "next/link";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // O usuário chega aqui após clicar no link do e-mail, que passou por
 // /auth/callback e estabeleceu a sessão. Se não houver sessão, o link foi
 // inválido/expirado — orientamos a pedir outro.
 export default async function RedefinirSenhaPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     return (

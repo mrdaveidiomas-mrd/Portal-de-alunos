@@ -105,11 +105,14 @@ export function BlockForm({
     });
   }
 
-  // Autosave debounced: agenda um save 800ms após a última alteração.
+  // Autosave debounced: agenda um save 1500ms após a última alteração. Um
+  // debounce mais folgado (era 800ms) reduz o volume de PATCH /blocks durante
+  // digitação rápida — menos carga no gateway (que no plano free estava
+  // dando 504 em picos). O flush no blur continua salvando na saída.
   function handleFormChange() {
     setStatus("saving");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(runSave, 800);
+    debounceRef.current = setTimeout(runSave, 1500);
   }
 
   // Flush imediato: cancela o debounce pendente e salva na hora. Chamado

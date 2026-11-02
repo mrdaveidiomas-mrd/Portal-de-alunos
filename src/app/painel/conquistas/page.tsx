@@ -15,6 +15,7 @@ import {
   type SetCode,
 } from "@/lib/achievements/catalog";
 import { computeUserMetrics } from "@/lib/achievements/metrics";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
 
@@ -48,9 +49,7 @@ interface ItemView {
 
 export default async function ConquistasPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const [{ data: catalog }, { data: owned }, metrics] = await Promise.all([

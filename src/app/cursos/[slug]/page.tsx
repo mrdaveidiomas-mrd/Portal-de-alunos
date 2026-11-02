@@ -7,6 +7,7 @@ import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getCourseStructure } from "@/lib/courses/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { CourseLanguage } from "@/types/content";
 
@@ -22,10 +23,7 @@ export default async function CoursePage({
 }) {
   const { slug } = await params;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
   }

@@ -14,6 +14,7 @@ import {
   voiceForLang,
 } from "@/lib/preferences/queries";
 import { resolveCurrentStreak } from "@/lib/streak/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PartPage({
@@ -23,10 +24,7 @@ export default async function PartPage({
 }) {
   const { partId } = await params;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
   }

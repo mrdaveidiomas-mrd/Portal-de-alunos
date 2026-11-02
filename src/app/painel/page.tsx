@@ -20,6 +20,7 @@ import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { listStudentLiveSessions } from "@/lib/live-sessions/queries";
 import { countDueItems } from "@/lib/srs/queries";
 import { resolveCurrentStreak } from "@/lib/streak/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { CefrLevel, CourseLanguage } from "@/types/content";
 import type { UserRole } from "@/types/user";
@@ -41,10 +42,7 @@ function levelLabel(level: CefrLevel): string {
 
 export default async function PainelPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   // Defesa em profundidade: o proxy já protege /painel, mas não confiamos só
   // nele para renderizar dados do usuário.

@@ -10,14 +10,13 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getUserPreferences } from "@/lib/preferences/queries";
 import { listDueItems } from "@/lib/srs/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { languageCodeForVoice } from "@/lib/tts/voices";
 
 export default async function SessaoRevisaoPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const [items, prefs] = await Promise.all([

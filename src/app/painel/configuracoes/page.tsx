@@ -8,13 +8,12 @@ import {
   ThemeSection,
 } from "@/components/shared/SettingsSections";
 import { getUserPreferences } from "@/lib/preferences/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   // Idiomas das matrículas ativas → quais seções de voz mostrar.

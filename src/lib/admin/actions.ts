@@ -12,6 +12,7 @@ import type {
   EnrollState,
 } from "@/lib/admin/types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { withTransientRetry } from "@/lib/utils/retry";
 
 // ====================================================================
 // Helpers
@@ -643,11 +644,25 @@ export async function updateBlock(formData: FormData) {
   const courseId = str(formData, "course_id");
   const type = str(formData, "type");
   const { data: blockData, solution } = buildBlockData(type, formData);
-  await supabase.from("blocks").update({ data: blockData as never }).eq("id", id);
+  // Retry transitório: no plano free o gateway às vezes devolve 504 em picos,
+  // e o autosave (que roda a cada alteração) não pode perder a gravação por
+  // isso. Em falha PERSISTENTE, propaga o erro — o BlockForm mostra o toast
+  // "Não consegui salvar" em vez de fingir que salvou.
+  await withTransientRetry(async () => {
+    const { error, status } = await supabase
+      .from("blocks")
+      .update({ data: blockData as never })
+      .eq("id", id);
+    // O PostgREST devolve o status na resposta, não no objeto de erro.
+    if (error) throw Object.assign(error, { status });
+  });
   if (solution) {
-    await supabase
-      .from("exercise_solutions")
-      .upsert({ block_id: id, course_id: courseId, solution: solution as never });
+    await withTransientRetry(async () => {
+      const { error, status } = await supabase
+        .from("exercise_solutions")
+        .upsert({ block_id: id, course_id: courseId, solution: solution as never });
+      if (error) throw Object.assign(error, { status });
+    });
   }
 }
 

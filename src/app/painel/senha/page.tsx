@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // Aceita ?from=admin|professor para customizar o link de volta —
 // admin/professor caem aqui via "Trocar senha" das próprias
@@ -14,10 +14,7 @@ export default async function TrocarSenhaPage({
 }: {
   searchParams: Promise<{ from?: string }>;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const { from } = await searchParams;

@@ -9,13 +9,12 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { countDueItems } from "@/lib/srs/queries";
+import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function RevisarPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   // RLS já filtra para o usuário; trazemos parte + lição + curso aninhados.
