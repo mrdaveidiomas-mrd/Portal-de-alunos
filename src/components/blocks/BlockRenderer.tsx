@@ -4,6 +4,7 @@ import { ExamplesBlock } from "@/components/blocks/ExamplesBlock";
 import { FillBlankExercise } from "@/components/blocks/FillBlankExercise";
 import { ImageBlock } from "@/components/blocks/ImageBlock";
 import { MultipleChoiceExercise } from "@/components/blocks/MultipleChoiceExercise";
+import { PassageBlock } from "@/components/blocks/PassageBlock";
 import { PdfBlock } from "@/components/blocks/PdfBlock";
 import { PronunciationBlock } from "@/components/blocks/PronunciationBlock";
 import { ReadingBlock } from "@/components/blocks/ReadingBlock";
@@ -22,6 +23,7 @@ import {
   multipleChoiceData,
   pronunciationData,
   readingData,
+  passageData,
   pdfData,
   reorderWordsData,
   richTextData,
@@ -138,6 +140,14 @@ export function BlockRenderer({
         <PdfBlock data={parsed.data} />
       ) : (
         <Notice>Bloco de PDF inválido.</Notice>
+      );
+    }
+    case "passage": {
+      const parsed = passageData.safeParse(block.data);
+      return parsed.success ? (
+        <PassageBlock data={parsed.data} />
+      ) : (
+        <Notice>Texto base inválido.</Notice>
       );
     }
     case "speaking": {

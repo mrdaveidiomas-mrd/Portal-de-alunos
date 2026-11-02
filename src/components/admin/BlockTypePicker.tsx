@@ -15,7 +15,16 @@ import { cn } from "@/lib/utils/cn";
 // ele aparece logo acima, na lista, já em modo de edição com autosave.
 // O picker em si nunca vira formulário — some a confusão de editar dentro
 // do card de escolha e de ter que "trocar tipo" depois.
-export function BlockTypePicker({ partId }: { partId: string }) {
+//
+// Com `passageId`, oferece só os tipos de pergunta e cria a pergunta já ligada
+// àquele texto base.
+export function BlockTypePicker({
+  partId,
+  passageId,
+}: {
+  partId: string;
+  passageId?: string;
+}) {
   const [pending, startTransition] = useTransition();
   // Qual card está sendo criado — para dar feedback só nele.
   const [adding, setAdding] = useState<string | null>(null);
@@ -29,6 +38,7 @@ export function BlockTypePicker({ partId }: { partId: string }) {
     const fd = new FormData();
     fd.set("part_id", partId);
     fd.set("type", entry.value);
+    if (passageId) fd.set("passage_id", passageId);
     startTransition(async () => {
       try {
         await createBlock(fd);
@@ -49,14 +59,16 @@ export function BlockTypePicker({ partId }: { partId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <TypeGroup
-        title="Conteúdo lecionado"
-        subtitle="Blocos que apresentam o conteúdo da parte."
-        items={CONTENT_TYPES}
-        onPick={add}
-        pending={pending}
-        adding={adding}
-      />
+      {!passageId && (
+        <TypeGroup
+          title="Conteúdo lecionado"
+          subtitle="Blocos que apresentam o conteúdo da parte."
+          items={CONTENT_TYPES}
+          onPick={add}
+          pending={pending}
+          adding={adding}
+        />
+      )}
       <TypeGroup
         title="Exercícios autocorrigidos"
         subtitle="Blocos com correção automática e XP."

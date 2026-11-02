@@ -25,6 +25,7 @@ export const CONTENT_TYPES: BlockTypeEntry[] = [
   { value: "table", label: "Tabela", description: "Grade de linhas e colunas.", icon: <IconTable /> },
   { value: "image", label: "Imagem", description: "Imagem com legenda.", icon: <IconImage /> },
   { value: "pdf", label: "PDF", description: "Anexe um arquivo PDF.", icon: <IconPdf /> },
+  { value: "passage", label: "Texto base", description: "Texto com várias perguntas juntas.", icon: <IconPassage /> },
 ];
 
 export const EXERCISE_TYPES_PICKER: BlockTypeEntry[] = [
@@ -156,6 +157,17 @@ function IconPdf() {
       <path d="M14 3v5h5" />
       <path d="M8.5 13.5h1a1.5 1.5 0 0 1 0 3h-1zM8.5 16.5v-3" />
       <path d="M14.5 13.5h2M14.5 13.5v3M14.5 15h1.5" />
+    </svg>
+  );
+}
+
+function IconPassage() {
+  // Página de texto com um ponto de interrogação.
+  return (
+    <svg {...svgProps()}>
+      <path d="M4 5h16M4 10h9M4 15h7M4 20h5" />
+      <path d="M16 13a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1-1.5 2" />
+      <path d="M18 20.5v.01" />
     </svg>
   );
 }

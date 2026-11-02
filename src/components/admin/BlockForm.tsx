@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
 import {
@@ -44,6 +45,8 @@ export interface BlockInitial {
   // imagem opcional das perguntas
   imageUrl?: string;
   imageAlt?: string;
+  // texto base ao qual a pergunta pertence
+  passageId?: string;
 }
 
 const inputCls =
@@ -71,6 +74,7 @@ export function BlockForm({
   type,
   initial = {},
   headerSlot,
+  passages = [],
 }: {
   partId: string;
   courseId: string;
@@ -80,7 +84,10 @@ export function BlockForm({
   // Conteúdo extra à direita do header (ex.: BlockRowMenu) — alinhado
   // na mesma linha do tipo do bloco, evitando uma faixa morta acima.
   headerSlot?: React.ReactNode;
+  // Textos base da parte: opções de vínculo nas perguntas.
+  passages?: { id: string; label: string }[];
 }) {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,13 +97,14 @@ export function BlockForm({
 
   // Salva AGORA (lê o FormData atual e chama updateBlock). Compartilhado
   // pelo autosave debounced e pelo flush imediato.
-  function runSave() {
+  function runSave(onSaved?: () => void) {
     const form = formRef.current;
     if (!form) return;
     const fd = new FormData(form);
     startTransition(async () => {
       try {
         await updateBlock(fd);
+        onSaved?.();
         setStatus("saved");
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
         savedTimerRef.current = setTimeout(() => setStatus("idle"), 1600);
@@ -117,7 +125,7 @@ export function BlockForm({
   function handleFormChange() {
     setStatus("saving");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(runSave, 1500);
+    debounceRef.current = setTimeout(() => runSave(), 1500);
   }
 
   // Flush imediato: cancela o debounce pendente e salva na hora. Chamado
@@ -125,13 +133,20 @@ export function BlockForm({
   // itálico como última ação e saiu antes dos 800ms) — sem isso, o timer
   // pendente se perdia na navegação e a formatação não era persistida.
   // Também usado no upload de imagem e nas mudanças estruturais da tabela.
-  function flushSave() {
+  function flushSave(onSaved?: () => void) {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
     setStatus("saving");
-    runSave();
+    runSave(onSaved);
+  }
+
+  // Trocar o texto base move o card na lista, então salva na hora e recarrega
+  // os dados. updateBlock não revalida de propósito (ver comentário lá).
+  function handlePassageChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    e.stopPropagation();
+    flushSave(() => router.refresh());
   }
 
   return (
@@ -180,7 +195,17 @@ export function BlockForm({
           // Ao perder o foco, descarrega o save pendente na hora — evita
           // perder a última formatação (cor/negrito/itálico) quando o
           // admin sai antes do debounce.
-          onFlush={flushSave}
+          onFlush={() => flushSave()}
+        />
+      )}
+
+      {type === "passage" && (
+        <RichTextEditor
+          name="text"
+          initialHtml={initial.text ?? ""}
+          placeholder="Escreva o texto que as perguntas vão usar…"
+          onUpdate={handleFormChange}
+          onFlush={() => flushSave()}
         />
       )}
 
@@ -189,7 +214,7 @@ export function BlockForm({
           name="table"
           initialJson={initial.table}
           onUpdate={handleFormChange}
-          onFlush={flushSave}
+          onFlush={() => flushSave()}
         />
       )}
 
@@ -201,7 +226,7 @@ export function BlockForm({
           initialCaption={initial.caption}
           initialWidth={initial.width}
           onUpdate={handleFormChange}
-          onFlush={flushSave}
+          onFlush={() => flushSave()}
         />
       )}
 
@@ -212,7 +237,7 @@ export function BlockForm({
           initialFilename={initial.filename}
           initialCaption={initial.caption}
           onUpdate={handleFormChange}
-          onFlush={flushSave}
+          onFlush={() => flushSave()}
         />
       )}
 
@@ -430,13 +455,32 @@ export function BlockForm({
         </>
       )}
 
-      {isExerciseType(type) && (
+      {(isExerciseType(type) || type === "passage") && (
         <QuestionImageField
           courseId={courseId}
           initialUrl={initial.imageUrl}
           initialAlt={initial.imageAlt}
-          onFlush={flushSave}
+          onFlush={() => flushSave()}
         />
+      )}
+
+      {isExerciseType(type) && passages.length > 0 && (
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-fg-secondary">Texto base</span>
+          <select
+            name="passage_id"
+            defaultValue={initial.passageId ?? ""}
+            onChange={handlePassageChange}
+            className={inputCls}
+          >
+            <option value="">Nenhum (pergunta avulsa)</option>
+            {passages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
 
       {/* Sem botão de salvar: o bloco já existe (criado pelo picker) e o

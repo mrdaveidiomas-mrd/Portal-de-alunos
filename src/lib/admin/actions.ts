@@ -11,6 +11,7 @@ import type {
   CreateUserState,
   EnrollState,
 } from "@/lib/admin/types";
+import { moveSiblings, passageIdOf } from "@/lib/blocks/pages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { withTransientRetry } from "@/lib/utils/retry";
 
@@ -287,6 +288,7 @@ export async function duplicateLesson(formData: FormData) {
       .eq("part_id", part.id)
       .order("position");
 
+    const newIds = new Map<string, string>();
     for (const block of blocks ?? []) {
       const { data: newBlock } = await supabase
         .from("blocks")
@@ -301,6 +303,7 @@ export async function duplicateLesson(formData: FormData) {
         .select("id")
         .single();
       if (!newBlock) continue;
+      newIds.set(block.id, newBlock.id);
 
       const { data: solution } = await supabase
         .from("exercise_solutions")
@@ -314,6 +317,25 @@ export async function duplicateLesson(formData: FormData) {
           solution: solution.solution as never,
         });
       }
+    }
+
+    // As perguntas copiadas ainda apontam para o texto base original, e o
+    // texto pode vir depois delas: só dá para refazer o vínculo com todos os
+    // ids novos em mãos.
+    for (const block of blocks ?? []) {
+      const passageId = passageIdOf(block.data);
+      const newBlockId = newIds.get(block.id);
+      const newPassageId = passageId ? newIds.get(passageId) : undefined;
+      if (!newBlockId || !newPassageId) continue;
+      await supabase
+        .from("blocks")
+        .update({
+          data: {
+            ...(block.data as Record<string, unknown>),
+            passageId: newPassageId,
+          } as never,
+        })
+        .eq("id", newBlockId);
     }
   }
 
@@ -406,6 +428,10 @@ function buildBlockData(type: string, formData: FormData): {
     imageUrl: str(formData, "image_url") || undefined,
     imageAlt: str(formData, "image_alt") || undefined,
   };
+  const questionFields = {
+    ...questionImage,
+    passageId: str(formData, "passage_id") || undefined,
+  };
 
   switch (type) {
     case "rich_text":
@@ -492,6 +518,15 @@ function buildBlockData(type: string, formData: FormData): {
         solution: null,
       };
     }
+    case "passage":
+      return {
+        data: {
+          ...questionImage,
+          title: str(formData, "title") || undefined,
+          text: str(formData, "text"),
+        },
+        solution: null,
+      };
     case "pdf":
       return {
         data: {
@@ -532,7 +567,7 @@ function buildBlockData(type: string, formData: FormData): {
     case "multiple_choice":
       return {
         data: {
-          ...questionImage,
+          ...questionFields,
           question: str(formData, "question"),
           options: lines("options"),
         },
@@ -544,7 +579,7 @@ function buildBlockData(type: string, formData: FormData): {
         .map((s) => s.trim())
         .filter(Boolean);
       return {
-        data: { ...questionImage, prompt: str(formData, "prompt") },
+        data: { ...questionFields, prompt: str(formData, "prompt") },
         solution: { answer: str(formData, "answer"), ...(alternatives.length ? { alternatives } : {}) },
       };
     }
@@ -555,7 +590,7 @@ function buildBlockData(type: string, formData: FormData): {
         .filter(Boolean);
       return {
         data: {
-          ...questionImage,
+          ...questionFields,
           instruction: str(formData, "instruction") || undefined,
           source: str(formData, "source"),
         },
@@ -572,7 +607,7 @@ function buildBlockData(type: string, formData: FormData): {
         .filter(Boolean);
       return {
         data: {
-          ...questionImage,
+          ...questionFields,
           instruction: str(formData, "instruction") || undefined,
           sentence: str(formData, "sentence"),
         },
@@ -591,7 +626,7 @@ function buildBlockData(type: string, formData: FormData): {
         .filter(Boolean);
       return {
         data: {
-          ...questionImage,
+          ...questionFields,
           instruction: str(formData, "instruction") || undefined,
           tokens,
         },
@@ -686,7 +721,19 @@ export async function deleteBlock(formData: FormData) {
 export async function moveBlock(formData: FormData) {
   const { supabase } = await requireAdmin();
   const partId = str(formData, "part_id");
-  await reorder(supabase, "blocks", "part_id", partId, str(formData, "id"), str(formData, "dir") as "up" | "down");
+  const id = str(formData, "id");
+  const { data: blocks } = await supabase
+    .from("blocks")
+    .select("id, type, position, data")
+    .eq("part_id", partId);
+  const siblings = moveSiblings(blocks ?? [], id);
+  const idx = siblings.findIndex((b) => b.id === id);
+  const other = siblings[str(formData, "dir") === "up" ? idx - 1 : idx + 1];
+  const current = siblings[idx];
+  if (current && other) {
+    await supabase.from("blocks").update({ position: other.position }).eq("id", current.id);
+    await supabase.from("blocks").update({ position: current.position }).eq("id", other.id);
+  }
   revalidatePath(`/admin/partes/${partId}`);
 }
 

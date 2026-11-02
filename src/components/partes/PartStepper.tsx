@@ -12,12 +12,14 @@ import { PartCompletionDialog } from "@/components/partes/PartCompletionDialog";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { groupBlocksIntoPages } from "@/lib/blocks/pages";
 import { isExerciseType } from "@/lib/blocks/schemas";
 import { markPartCompleted } from "@/lib/parts/actions";
 import { toast } from "@/lib/toast/store";
 import type { Block } from "@/types/content";
 
-// Stepper que mostra UM bloco por vez dentro de uma parte (estilo Duolingo).
+// Stepper que mostra UMA página por vez dentro de uma parte (estilo Duolingo).
+// Em geral a página é um bloco; um texto base aparece junto das suas perguntas.
 //
 // Regras de avanço:
 //   - Conteúdo (rich_text, vocabulary, reading_tts, dialogue_tts,
@@ -25,7 +27,8 @@ import type { Block } from "@/types/content";
 //   - Exercícios (mc, fill_blank, translation, reorder, error_correction):
 //     "Próximo" aparece só DEPOIS que o aluno acerta (callback onSolved
 //     vindo do renderer). Em ReorderWords/MultipleChoice só "perfect"
-//     conta; nos demais "close" também libera.
+//     conta; nos demais "close" também libera. Com várias perguntas na
+//     página, "Próximo" espera todas.
 //
 // O último bloco é seguido pela "tela final": se a parte JÁ está completa
 // (todos os exercícios foram acertados, ou marcada manualmente), mostra
@@ -61,12 +64,13 @@ export function PartStepper({
   student?: LessonCompletionStudent;
   currentStreak?: number;
 }) {
-  const total = blocks.length;
+  const pages = groupBlocksIntoPages(blocks);
+  const total = pages.length;
   const [index, setIndex] = useState(0);
   // Tracking dos blocos que viraram "Próximo disponível" — para que voltar
   // não force resolver de novo (o servidor já guarda o melhor estado, então
   // re-renderizar o exercício não derruba o solved).
-  const [unlockedAhead, setUnlockedAhead] = useState<Set<number>>(new Set());
+  const [unlockedAhead, setUnlockedAhead] = useState<Set<string>>(new Set());
   const [completed, setCompleted] = useState(initiallyCompleted);
   const [pending, startTransition] = useTransition();
   // Estado da tela de celebração: abre quando a parte transiciona para
@@ -95,18 +99,33 @@ export function PartStepper({
   }
 
   const hasExerciseInPart = blocks.some((b) => isExerciseType(b.type));
-  const current = blocks[index];
+  const page = pages[index];
   const isLast = index === total - 1;
-  const isExercise = current ? isExerciseType(current.type) : false;
+  const exercises = (page?.items ?? []).filter((b) => isExerciseType(b.type));
   // Para conteúdo, sempre pode seguir. Para exercício, precisa estar solved.
-  const canAdvance = !isExercise || unlockedAhead.has(index);
+  const canAdvance = exercises.every((b) => unlockedAhead.has(b.id));
 
-  function markSolved(i: number) {
+  function markSolved(blockId: string) {
     setUnlockedAhead((prev) => {
-      if (prev.has(i)) return prev;
+      if (prev.has(blockId)) return prev;
       const next = new Set(prev);
-      next.add(i);
+      next.add(blockId);
       return next;
+    });
+  }
+
+  function handlePartCompleted(info: {
+    stars: number | null;
+    xpAwarded: number;
+    lessonJustCompleted?: boolean;
+  }) {
+    setCompleted(true);
+    setCelebration({
+      open: true,
+      stars: info.stars,
+      xpAwarded: info.xpAwarded,
+      seed: newSeed(),
+      lessonJustCompleted: info.lessonJustCompleted ?? false,
     });
   }
 
@@ -163,8 +182,12 @@ export function PartStepper({
           <span>
             {index + 1} de {total}
           </span>
-          {isExercise && !canAdvance && (
-            <span>Responda para continuar</span>
+          {!canAdvance && (
+            <span>
+              {exercises.length > 1
+                ? "Responda todas as perguntas para continuar"
+                : "Responda para continuar"}
+            </span>
           )}
         </div>
         <ProgressBar
@@ -174,25 +197,46 @@ export function PartStepper({
         />
       </div>
 
-      {/* Bloco atual */}
-      <Card key={current?.id} padded className="animate-fade-slide-in">
-        {current && (
+      {/* Página atual */}
+      <Card
+        key={page?.passage?.id ?? page?.items[0]?.id}
+        padded
+        className="animate-fade-slide-in flex flex-col gap-6"
+      >
+        {page?.passage && (
           <BlockRenderer
-            block={current}
+            block={page.passage}
             tts={tts}
             previewMode={previewMode}
-            onSolved={() => markSolved(index)}
-            onPartCompleted={(info) => {
-              setCompleted(true);
-              setCelebration({
-                open: true,
-                stars: info.stars,
-                xpAwarded: info.xpAwarded,
-                seed: newSeed(),
-                lessonJustCompleted: info.lessonJustCompleted ?? false,
-              });
-            }}
           />
+        )}
+        {page?.items.map((block, i) =>
+          page.passage ? (
+            <div
+              key={block.id}
+              className="flex flex-col gap-3 border-t border-border-primary pt-6"
+            >
+              <span className="text-xs font-medium uppercase text-fg-tertiary">
+                Pergunta {i + 1} de {page.items.length}
+              </span>
+              <BlockRenderer
+                block={block}
+                tts={tts}
+                previewMode={previewMode}
+                onSolved={() => markSolved(block.id)}
+                onPartCompleted={handlePartCompleted}
+              />
+            </div>
+          ) : (
+            <BlockRenderer
+              key={block.id}
+              block={block}
+              tts={tts}
+              previewMode={previewMode}
+              onSolved={() => markSolved(block.id)}
+              onPartCompleted={handlePartCompleted}
+            />
+          ),
         )}
       </Card>
 
@@ -312,7 +356,7 @@ function FinalAction({
       <span className="text-xs text-fg-tertiary">
         {canAdvance
           ? "Resolva todos os exercícios para concluir a parte."
-          : "Responda o exercício para continuar."}
+          : "Responda para continuar."}
       </span>
     );
   }

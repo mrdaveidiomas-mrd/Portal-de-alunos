@@ -12,7 +12,7 @@ import {
   fillBlankSolution,
   multipleChoiceData,
   multipleChoiceSolution,
-  questionImageData,
+  questionFieldsData,
   reorderWordsData,
   translationData,
   translationSolution,
@@ -259,8 +259,11 @@ export async function submitExercise(raw: {
   }
 
   // SRS: erros e "quase lá" entram (ou voltam) para a fila de revisão.
-  if (state !== "perfect" && srsQuestion && srsAnswer) {
-    const media = questionImageData.safeParse(block.data);
+  // Pergunta de texto base fica de fora: a revisão mostra um cartão isolado, e
+  // a pergunta de interpretação não tem como ser respondida sem o texto.
+  const media = questionFieldsData.safeParse(block.data);
+  const linkedToPassage = media.success && Boolean(media.data.passageId);
+  if (state !== "perfect" && srsQuestion && srsAnswer && !linkedToPassage) {
     await upsertExerciseSrsItem(admin, {
       userId: user.id,
       courseId: block.course_id,

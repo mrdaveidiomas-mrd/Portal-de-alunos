@@ -6,6 +6,7 @@ import { BlockTypePicker } from "@/components/admin/BlockTypePicker";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
+import { groupBlocksIntoPages } from "@/lib/blocks/pages";
 import {
   dialogueData,
   fillBlankData,
@@ -17,9 +18,10 @@ import {
   errorCorrectionSolution,
   examplesData,
   imageData,
+  passageData,
   pdfData,
   pronunciationData,
-  questionImageData,
+  questionFieldsData,
   readingData,
   reorderWordsData,
   richTextData,
@@ -94,6 +96,10 @@ function toInitial(
             width: p.data.width ?? "full",
           }
         : {};
+    }
+    case "passage": {
+      const p = passageData.safeParse(data);
+      return p.success ? { title: p.data.title ?? "", text: p.data.text } : {};
     }
     case "pdf": {
       const p = pdfData.safeParse(data);
@@ -176,11 +182,15 @@ function toInitial(
   }
 }
 
-// Imagem opcional das perguntas: comum a todos os tipos de exercício.
-function questionImageInitial(data: unknown): BlockInitial {
-  const p = questionImageData.safeParse(data);
+// Imagem e texto base das perguntas: comuns a todos os tipos de exercício.
+function questionInitial(data: unknown): BlockInitial {
+  const p = questionFieldsData.safeParse(data);
   return p.success
-    ? { imageUrl: p.data.imageUrl, imageAlt: p.data.imageAlt }
+    ? {
+        imageUrl: p.data.imageUrl,
+        imageAlt: p.data.imageAlt,
+        passageId: p.data.passageId,
+      }
     : {};
 }
 
@@ -218,6 +228,35 @@ export default async function AdminPartPage({
     for (const s of sols ?? []) solutions.set(s.block_id, s.solution);
   }
 
+  const pages = groupBlocksIntoPages(blocks ?? []);
+  const passages = pages
+    .flatMap((page) => (page.passage ? [page.passage] : []))
+    .map((passage, i) => ({
+      id: passage.id,
+      label:
+        passageData.safeParse(passage.data).data?.title?.trim() ||
+        `Texto base ${i + 1}`,
+    }));
+
+  function renderBlock(block: NonNullable<typeof blocks>[number]) {
+    return (
+      <Card key={block.id} className="flex flex-col p-7">
+        <BlockForm
+          partId={part!.id}
+          courseId={part!.course_id}
+          blockId={block.id}
+          type={block.type}
+          initial={{
+            ...toInitial(block.type, block.data, solutions.get(block.id)),
+            ...questionInitial(block.data),
+          }}
+          passages={passages}
+          headerSlot={<BlockRowMenu blockId={block.id} partId={part!.id} />}
+        />
+      </Card>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <BackLink href={`/admin/licoes/${part.lesson_id}`} label="Lição" />
@@ -229,23 +268,29 @@ export default async function AdminPartPage({
           nos formulários, e na prática o admin reordena blocos com pouca
           frequência. Módulos/lições/partes seguem com DnD. */}
       <section className="flex flex-col gap-4">
-        {(blocks ?? []).map((block) => (
-          <Card key={block.id} className="flex flex-col p-7">
-            <BlockForm
-              partId={part.id}
-              courseId={part.course_id}
-              blockId={block.id}
-              type={block.type}
-              initial={{
-                ...toInitial(block.type, block.data, solutions.get(block.id)),
-                ...questionImageInitial(block.data),
-              }}
-              headerSlot={
-                <BlockRowMenu blockId={block.id} partId={part.id} />
-              }
-            />
-          </Card>
-        ))}
+        {pages.map((page) =>
+          page.passage ? (
+            <div key={page.passage.id} className="flex flex-col gap-4">
+              {renderBlock(page.passage)}
+              <div className="ml-3 flex flex-col gap-4 border-l-2 border-border-primary pl-4">
+                {page.items.map((item) => renderBlock(item))}
+                <details className="rounded-lg border border-dashed border-border-primary p-4">
+                  <summary className="cursor-pointer text-sm font-medium text-fg-secondary">
+                    Adicionar pergunta a este texto
+                  </summary>
+                  <div className="mt-4">
+                    <BlockTypePicker
+                      partId={part.id}
+                      passageId={page.passage.id}
+                    />
+                  </div>
+                </details>
+              </div>
+            </div>
+          ) : (
+            page.items.map((item) => renderBlock(item))
+          ),
+        )}
       </section>
 
       {/* Escolher o tipo CRIA o bloco na hora (em branco) — ele aparece na
