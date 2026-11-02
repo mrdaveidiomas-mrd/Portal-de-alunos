@@ -106,6 +106,8 @@ export interface PartView {
   blocks: Block[];
   progress: PartProgress | null;
   marked: boolean;
+  // Exercícios que o aluno já acertou: não precisam ser respondidos de novo.
+  solvedBlockIds: string[];
 }
 
 // Busca uma parte com seus blocos (ordenados) + lição/curso para navegação e o
@@ -123,7 +125,7 @@ export async function getPartView(
 
   if (!part) return null;
 
-  const [lessonRes, courseRes, blocksRes, progressRes, markRes] =
+  const [lessonRes, courseRes, blocksRes, progressRes, markRes, attemptsRes] =
     await Promise.all([
       supabase.from("lessons").select("*").eq("id", part.lesson_id).maybeSingle(),
       supabase.from("courses").select("*").eq("id", part.course_id).maybeSingle(),
@@ -140,6 +142,12 @@ export async function getPartView(
         .eq("part_id", partId)
         .eq("user_id", userId)
         .maybeSingle(),
+      supabase
+        .from("exercise_attempts")
+        .select("block_id")
+        .eq("part_id", partId)
+        .eq("user_id", userId)
+        .eq("solved", true),
     ]);
 
   return {
@@ -149,5 +157,6 @@ export async function getPartView(
     blocks: blocksRes.data ?? [],
     progress: progressRes.data,
     marked: !!markRes.data,
+    solvedBlockIds: (attemptsRes.data ?? []).map((a) => a.block_id),
   };
 }

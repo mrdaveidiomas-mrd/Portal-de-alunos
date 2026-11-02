@@ -28,7 +28,9 @@ import type { Block } from "@/types/content";
 //     "Próximo" aparece só DEPOIS que o aluno acerta (callback onSolved
 //     vindo do renderer). Em ReorderWords/MultipleChoice só "perfect"
 //     conta; nos demais "close" também libera. Com várias perguntas na
-//     página, "Próximo" espera todas.
+//     página, "Próximo" espera todas. O que o aluno já acertou em outra
+//     visita (`solvedBlockIds`) não precisa ser respondido de novo; quem errou
+//     e recarregou a página responde só aquela pergunta.
 //
 // O último bloco é seguido pela "tela final": se a parte JÁ está completa
 // (todos os exercícios foram acertados, ou marcada manualmente), mostra
@@ -38,6 +40,7 @@ import type { Block } from "@/types/content";
 export function PartStepper({
   partId,
   blocks,
+  solvedBlockIds = [],
   tts,
   initiallyCompleted,
   courseHref,
@@ -49,6 +52,7 @@ export function PartStepper({
 }: {
   partId: string;
   blocks: Block[];
+  solvedBlockIds?: string[];
   tts?: TtsOverride;
   initiallyCompleted: boolean;
   courseHref?: string;
@@ -102,8 +106,14 @@ export function PartStepper({
   const page = pages[index];
   const isLast = index === total - 1;
   const exercises = (page?.items ?? []).filter((b) => isExerciseType(b.type));
+  // Vem da prop, não de state: "Tentar de novo" zera as tentativas e revalida a
+  // página, e os exercícios precisam voltar a pedir resposta.
+  const solved = new Set(solvedBlockIds);
   // Para conteúdo, sempre pode seguir. Para exercício, precisa estar solved.
-  const canAdvance = exercises.every((b) => unlockedAhead.has(b.id));
+  const pendingExercises = exercises.filter(
+    (b) => !solved.has(b.id) && !unlockedAhead.has(b.id),
+  );
+  const canAdvance = pendingExercises.length === 0;
 
   function markSolved(blockId: string) {
     setUnlockedAhead((prev) => {
@@ -184,7 +194,7 @@ export function PartStepper({
           </span>
           {!canAdvance && (
             <span>
-              {exercises.length > 1
+              {pendingExercises.length > 1
                 ? "Responda todas as perguntas para continuar"
                 : "Responda para continuar"}
             </span>
@@ -223,6 +233,7 @@ export function PartStepper({
                 block={block}
                 tts={tts}
                 previewMode={previewMode}
+                alreadySolved={solved.has(block.id)}
                 onSolved={() => markSolved(block.id)}
                 onPartCompleted={handlePartCompleted}
               />
@@ -233,6 +244,7 @@ export function PartStepper({
               block={block}
               tts={tts}
               previewMode={previewMode}
+              alreadySolved={solved.has(block.id)}
               onSolved={() => markSolved(block.id)}
               onPartCompleted={handlePartCompleted}
             />

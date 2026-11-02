@@ -34,7 +34,7 @@ export default async function PartPage({
     notFound();
   }
 
-  const { part, lesson, course, blocks, progress, marked } = view;
+  const { part, lesson, course, blocks, progress, marked, solvedBlockIds } = view;
   const done = progress?.status === "completed";
 
   // Trazemos full_name + avatar_url para o LessonCompletionDialog usar no
@@ -142,6 +142,7 @@ export default async function PartPage({
       <PartStepper
         partId={part.id}
         blocks={blocks}
+        solvedBlockIds={solvedBlockIds}
         tts={tts}
         initiallyCompleted={done}
         courseHref={course ? `/cursos/${course.slug}` : undefined}

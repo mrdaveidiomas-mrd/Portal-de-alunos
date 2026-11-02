@@ -10,6 +10,7 @@ import { PronunciationBlock } from "@/components/blocks/PronunciationBlock";
 import { ReadingBlock } from "@/components/blocks/ReadingBlock";
 import { ReorderWordsExercise } from "@/components/blocks/ReorderWordsExercise";
 import { RichTextBlock } from "@/components/blocks/RichTextBlock";
+import { SolvedExercise } from "@/components/blocks/SolvedExercise";
 import { SpeakingBlock } from "@/components/blocks/SpeakingBlock";
 import { TableBlock } from "@/components/blocks/TableBlock";
 import { TranslationExercise } from "@/components/blocks/TranslationExercise";
@@ -20,6 +21,7 @@ import {
   examplesData,
   fillBlankData,
   imageData,
+  isExerciseType,
   multipleChoiceData,
   pronunciationData,
   readingData,
@@ -60,6 +62,7 @@ export function BlockRenderer({
   onSolved,
   onPartCompleted,
   previewMode = false,
+  alreadySolved = false,
 }: {
   block: Block;
   tts?: TtsOverride;
@@ -68,7 +71,13 @@ export function BlockRenderer({
   // Quando true, propaga para os exercícios — eles incluem na chamada da
   // Server Action para o backend não persistir nada (XP, progresso, SRS).
   previewMode?: boolean;
+  // Exercício que o aluno já acertou: mostra o enunciado, sem pedir resposta.
+  alreadySolved?: boolean;
 }) {
+  if (alreadySolved && isExerciseType(block.type)) {
+    return <SolvedExercise data={block.data} />;
+  }
+
   switch (block.type) {
     case "rich_text": {
       const parsed = richTextData.safeParse(block.data);
