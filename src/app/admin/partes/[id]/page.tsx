@@ -19,6 +19,7 @@ import {
   imageData,
   pdfData,
   pronunciationData,
+  questionImageData,
   readingData,
   reorderWordsData,
   richTextData,
@@ -175,6 +176,14 @@ function toInitial(
   }
 }
 
+// Imagem opcional das perguntas: comum a todos os tipos de exercício.
+function questionImageInitial(data: unknown): BlockInitial {
+  const p = questionImageData.safeParse(data);
+  return p.success
+    ? { imageUrl: p.data.imageUrl, imageAlt: p.data.imageAlt }
+    : {};
+}
+
 export default async function AdminPartPage({
   params,
 }: {
@@ -227,11 +236,10 @@ export default async function AdminPartPage({
               courseId={part.course_id}
               blockId={block.id}
               type={block.type}
-              initial={toInitial(
-                block.type,
-                block.data,
-                solutions.get(block.id),
-              )}
+              initial={{
+                ...toInitial(block.type, block.data, solutions.get(block.id)),
+                ...questionImageInitial(block.data),
+              }}
               headerSlot={
                 <BlockRowMenu blockId={block.id} partId={part.id} />
               }

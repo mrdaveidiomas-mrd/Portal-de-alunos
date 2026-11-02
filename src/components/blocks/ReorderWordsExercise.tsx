@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { QuestionImage } from "@/components/blocks/QuestionImage";
 import { Button } from "@/components/ui/Button";
 import type { ReorderWordsData } from "@/lib/blocks/schemas";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
@@ -134,6 +135,7 @@ export function ReorderWordsExercise({
 
   return (
     <div className="flex flex-col gap-3">
+      <QuestionImage url={data.imageUrl} alt={data.imageAlt} />
       {data.instruction && (
         <p className="text-sm font-medium text-fg-secondary">
           {data.instruction}

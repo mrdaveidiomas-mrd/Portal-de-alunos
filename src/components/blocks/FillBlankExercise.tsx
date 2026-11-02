@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { QuestionImage } from "@/components/blocks/QuestionImage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
@@ -46,6 +47,7 @@ export function FillBlankExercise({
 
   return (
     <div className="flex flex-col gap-3">
+      <QuestionImage url={data.imageUrl} alt={data.imageAlt} />
       <p className="font-medium text-fg-primary">{data.prompt}</p>
 
       <Input

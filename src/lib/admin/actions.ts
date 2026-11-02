@@ -402,6 +402,10 @@ function buildBlockData(type: string, formData: FormData): {
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean);
+  const questionImage = {
+    imageUrl: str(formData, "image_url") || undefined,
+    imageAlt: str(formData, "image_alt") || undefined,
+  };
 
   switch (type) {
     case "rich_text":
@@ -527,7 +531,11 @@ function buildBlockData(type: string, formData: FormData): {
       };
     case "multiple_choice":
       return {
-        data: { question: str(formData, "question"), options: lines("options") },
+        data: {
+          ...questionImage,
+          question: str(formData, "question"),
+          options: lines("options"),
+        },
         solution: { answerIndex: Number(str(formData, "answerIndex") || "0") },
       };
     case "fill_blank": {
@@ -536,7 +544,7 @@ function buildBlockData(type: string, formData: FormData): {
         .map((s) => s.trim())
         .filter(Boolean);
       return {
-        data: { prompt: str(formData, "prompt") },
+        data: { ...questionImage, prompt: str(formData, "prompt") },
         solution: { answer: str(formData, "answer"), ...(alternatives.length ? { alternatives } : {}) },
       };
     }
@@ -547,6 +555,7 @@ function buildBlockData(type: string, formData: FormData): {
         .filter(Boolean);
       return {
         data: {
+          ...questionImage,
           instruction: str(formData, "instruction") || undefined,
           source: str(formData, "source"),
         },
@@ -563,6 +572,7 @@ function buildBlockData(type: string, formData: FormData): {
         .filter(Boolean);
       return {
         data: {
+          ...questionImage,
           instruction: str(formData, "instruction") || undefined,
           sentence: str(formData, "sentence"),
         },
@@ -581,6 +591,7 @@ function buildBlockData(type: string, formData: FormData): {
         .filter(Boolean);
       return {
         data: {
+          ...questionImage,
           instruction: str(formData, "instruction") || undefined,
           tokens,
         },

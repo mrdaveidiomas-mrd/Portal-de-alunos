@@ -108,18 +108,30 @@ export const speakingData = z.object({
 
 // --- Blocos de exercício (dados PÚBLICOS — sem gabarito) ---
 // O gabarito vive em exercise_solutions (fora do alcance do aluno).
+
+// Imagem opcional da pergunta, no bucket `lesson-images` (mesmo do bloco de
+// imagem). Campos comuns a todos os tipos de exercício.
+const questionImageFields = {
+  imageUrl: z.string().optional(),
+  imageAlt: z.string().optional(),
+};
+export const questionImageData = z.object(questionImageFields);
+
 export const multipleChoiceData = z.object({
+  ...questionImageFields,
   question: z.string(),
   options: z.array(z.string()).min(2),
 });
 
 export const fillBlankData = z.object({
+  ...questionImageFields,
   prompt: z.string(),
 });
 
 // Tradução: aluno traduz `source` para o idioma esperado. `instruction`
 // indica a direção quando não está óbvia ("Traduza para o inglês:").
 export const translationData = z.object({
+  ...questionImageFields,
   instruction: z.string().optional(),
   source: z.string(),
 });
@@ -128,6 +140,7 @@ export const translationData = z.object({
 // (com seed determinístico do blockId, para não bagunçar a cada render) e
 // o aluno envia o array de índices originais na ordem em que escolheu.
 export const reorderWordsData = z.object({
+  ...questionImageFields,
   instruction: z.string().optional(),
   tokens: z.array(z.string().min(1)).min(2),
 });
@@ -135,6 +148,7 @@ export const reorderWordsData = z.object({
 // Correção de erro: aluno reescreve `sentence` (frase com erro) corrigida.
 // `instruction` opcional ("Corrija a frase abaixo:").
 export const errorCorrectionData = z.object({
+  ...questionImageFields,
   instruction: z.string().optional(),
   sentence: z.string(),
 });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { QuestionImage } from "@/components/blocks/QuestionImage";
 import { Button } from "@/components/ui/Button";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
 import type { MultipleChoiceData } from "@/lib/blocks/schemas";
@@ -50,6 +51,7 @@ export function MultipleChoiceExercise({
 
   return (
     <div className="flex flex-col gap-3">
+      <QuestionImage url={data.imageUrl} alt={data.imageAlt} />
       <p className="font-medium text-fg-primary">{data.question}</p>
 
       <div className="flex flex-col gap-2">

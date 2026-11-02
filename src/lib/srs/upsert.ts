@@ -25,6 +25,8 @@ export async function upsertExerciseSrsItem(
     kind: "multiple_choice" | "fill_blank";
     question: string;
     answer: string;
+    imageUrl?: string;
+    imageAlt?: string;
     partTitle?: string;
     courseTitle?: string;
   },
@@ -34,6 +36,8 @@ export async function upsertExerciseSrsItem(
     kind: params.kind,
     question: params.question,
     answer: params.answer,
+    imageUrl: params.imageUrl,
+    imageAlt: params.imageAlt,
     partTitle: params.partTitle,
     courseTitle: params.courseTitle,
   };

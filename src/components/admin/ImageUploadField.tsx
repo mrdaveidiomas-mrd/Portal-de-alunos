@@ -4,7 +4,10 @@ import { useRef, useState } from "react";
 
 import { TrashIcon } from "@/components/icons/TrashIcon";
 import { Button } from "@/components/ui/Button";
-import { createClient } from "@/lib/supabase/browser";
+import {
+  LESSON_IMAGE_ACCEPT,
+  uploadLessonImage,
+} from "@/lib/storage/lesson-images";
 import { toast } from "@/lib/toast/store";
 
 // Campo do bloco de imagem: upload para o bucket `lesson-images`, preview,
@@ -27,17 +30,6 @@ import { toast } from "@/lib/toast/store";
 
 const inputCls =
   "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
-
-const MAX_BYTES = 5 * 1024 * 1024; // espelha o file_size_limit do bucket
-
-// Também serve de whitelist: mime fora deste mapa é rejeitado antes de
-// subir. A extensão vem daqui — nunca do nome do arquivo enviado.
-const EXT_BY_TYPE: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-  "image/gif": "gif",
-};
 
 const WIDTH_OPTIONS: { value: string; label: string }[] = [
   { value: "full", label: "Grande" },
@@ -72,50 +64,16 @@ export function ImageUploadField({
   async function handleFile(file: File | undefined) {
     if (!file || pending) return;
 
-    const ext = EXT_BY_TYPE[file.type];
-    if (!ext) {
-      toast.danger({
-        title: "Formato não suportado",
-        description: "Use PNG, JPG, WEBP ou GIF.",
-      });
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      toast.danger({
-        title: "Imagem muito grande",
-        description: "O limite é 5 MB.",
-      });
-      return;
-    }
-
     setPending(true);
     try {
-      const supabase = createClient();
-      // Path agrupado por curso + nome único: trocar a imagem de um bloco
-      // nunca sobrescreve a de outro, e não precisa de cache-busting.
-      const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const path = `${courseId}/${unique}.${ext}`;
-
-      const { error } = await supabase.storage
-        .from("lesson-images")
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type,
-        });
-      if (error) {
-        toast.danger({
-          title: "Não consegui enviar a imagem",
-          description: error.message,
-        });
+      const res = await uploadLessonImage(courseId, file);
+      if (!res.ok) {
+        toast.danger({ title: res.title, description: res.description });
         return;
       }
 
-      const { data } = supabase.storage
-        .from("lesson-images")
-        .getPublicUrl(path);
-      setUrl(data.publicUrl);
-      if (hiddenRef.current) hiddenRef.current.value = data.publicUrl;
+      setUrl(res.url);
+      if (hiddenRef.current) hiddenRef.current.value = res.url;
       toast.success({ title: "Imagem enviada" });
       // Salva na hora — a URL não passa pelo onChange do form.
       onFlush?.();
@@ -143,7 +101,7 @@ export function ImageUploadField({
       <input
         ref={fileRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif"
+        accept={LESSON_IMAGE_ACCEPT}
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />

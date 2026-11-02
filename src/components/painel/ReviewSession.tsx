@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { QuestionImage } from "@/components/blocks/QuestionImage";
 import { SpeakButton } from "@/components/blocks/SpeakButton";
 import { MicIcon } from "@/components/icons/MicIcon";
 import { StopIcon } from "@/components/icons/StopIcon";
@@ -155,6 +156,12 @@ export function ReviewSession({ items: initialItems, speech }: Props) {
           <span className="text-xs uppercase tracking-wide text-fg-tertiary">
             Pergunta
           </span>
+          {current.payload.type === "exercise" && (
+            <QuestionImage
+              url={current.payload.imageUrl}
+              alt={current.payload.imageAlt}
+            />
+          )}
           <p className="text-lg font-medium text-fg-primary">{prompt}</p>
           {helper && (
             <p className="text-sm italic text-fg-secondary">{helper}</p>

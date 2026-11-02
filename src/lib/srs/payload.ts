@@ -6,6 +6,9 @@ export interface SrsExercisePayload {
   kind: "multiple_choice" | "fill_blank";
   question: string;
   answer: string;
+  // Imagem da pergunta: sem ela, o enunciado pode não fazer sentido na revisão.
+  imageUrl?: string;
+  imageAlt?: string;
   partTitle?: string;
   courseTitle?: string;
 }

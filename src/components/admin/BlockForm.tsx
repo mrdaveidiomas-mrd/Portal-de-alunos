@@ -8,9 +8,11 @@ import {
 } from "@/components/admin/block-types";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { PdfUploadField } from "@/components/admin/PdfUploadField";
+import { QuestionImageField } from "@/components/admin/QuestionImageField";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TableGridEditor } from "@/components/admin/TableGridEditor";
 import { updateBlock } from "@/lib/admin/actions";
+import { isExerciseType } from "@/lib/blocks/schemas";
 import { toast } from "@/lib/toast/store";
 import { cn } from "@/lib/utils/cn";
 
@@ -39,6 +41,9 @@ export interface BlockInitial {
   width?: string;
   // pdf (compartilha url/caption com image)
   filename?: string;
+  // imagem opcional das perguntas
+  imageUrl?: string;
+  imageAlt?: string;
 }
 
 const inputCls =
@@ -423,6 +428,15 @@ export function BlockForm({
             quando mostra ao aluno.
           </Hint>
         </>
+      )}
+
+      {isExerciseType(type) && (
+        <QuestionImageField
+          courseId={courseId}
+          initialUrl={initial.imageUrl}
+          initialAlt={initial.imageAlt}
+          onFlush={flushSave}
+        />
       )}
 
       {/* Sem botão de salvar: o bloco já existe (criado pelo picker) e o
