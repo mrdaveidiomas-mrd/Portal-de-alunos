@@ -1,7 +1,14 @@
 import { SpeakButton } from "@/components/blocks/SpeakButton";
 import type { DialogueData } from "@/lib/blocks/schemas";
 
-export function DialogueBlock({ data }: { data: DialogueData }) {
+// `lang` é o idioma do curso. Sem ele, a função tts cairia nas vozes em inglês.
+export function DialogueBlock({
+  data,
+  lang = "en",
+}: {
+  data: DialogueData;
+  lang?: "en" | "es";
+}) {
   return (
     <div className="flex flex-col gap-2">
       {data.title && (
@@ -19,7 +26,7 @@ export function DialogueBlock({ data }: { data: DialogueData }) {
         body={{
           lines: data.lines,
           speakerGenders: data.speakerGenders,
-          lang: "en",
+          lang,
         }}
       />
     </div>

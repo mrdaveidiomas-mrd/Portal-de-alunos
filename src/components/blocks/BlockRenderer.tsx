@@ -106,7 +106,7 @@ export function BlockRenderer({
     case "dialogue_tts": {
       const parsed = dialogueData.safeParse(block.data);
       return parsed.success ? (
-        <DialogueBlock data={parsed.data} />
+        <DialogueBlock data={parsed.data} lang={tts?.lang} />
       ) : (
         <Notice>Bloco de diálogo inválido.</Notice>
       );
