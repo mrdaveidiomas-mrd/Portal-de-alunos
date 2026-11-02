@@ -108,6 +108,8 @@ export interface PartView {
   marked: boolean;
   // Exercícios que o aluno já acertou: não precisam ser respondidos de novo.
   solvedBlockIds: string[];
+  // Todos os exercícios já tentados, certos ou não: definem onde retomar a parte.
+  attemptedBlockIds: string[];
 }
 
 // Busca uma parte com seus blocos (ordenados) + lição/curso para navegação e o
@@ -144,11 +146,11 @@ export async function getPartView(
         .maybeSingle(),
       supabase
         .from("exercise_attempts")
-        .select("block_id")
+        .select("block_id, solved")
         .eq("part_id", partId)
-        .eq("user_id", userId)
-        .eq("solved", true),
+        .eq("user_id", userId),
     ]);
+  const attempts = attemptsRes.data ?? [];
 
   return {
     part,
@@ -157,6 +159,7 @@ export async function getPartView(
     blocks: blocksRes.data ?? [],
     progress: progressRes.data,
     marked: !!markRes.data,
-    solvedBlockIds: (attemptsRes.data ?? []).map((a) => a.block_id),
+    solvedBlockIds: attempts.filter((a) => a.solved).map((a) => a.block_id),
+    attemptedBlockIds: attempts.map((a) => a.block_id),
   };
 }

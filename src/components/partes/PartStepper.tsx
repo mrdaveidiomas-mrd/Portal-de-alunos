@@ -12,7 +12,7 @@ import { PartCompletionDialog } from "@/components/partes/PartCompletionDialog";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { groupBlocksIntoPages } from "@/lib/blocks/pages";
+import { groupBlocksIntoPages, resumePageIndex } from "@/lib/blocks/pages";
 import { isExerciseType } from "@/lib/blocks/schemas";
 import { markPartCompleted } from "@/lib/parts/actions";
 import { toast } from "@/lib/toast/store";
@@ -41,6 +41,7 @@ export function PartStepper({
   partId,
   blocks,
   solvedBlockIds = [],
+  attemptedBlockIds = [],
   tts,
   initiallyCompleted,
   courseHref,
@@ -53,6 +54,7 @@ export function PartStepper({
   partId: string;
   blocks: Block[];
   solvedBlockIds?: string[];
+  attemptedBlockIds?: string[];
   tts?: TtsOverride;
   initiallyCompleted: boolean;
   courseHref?: string;
@@ -70,7 +72,13 @@ export function PartStepper({
 }) {
   const pages = groupBlocksIntoPages(blocks);
   const total = pages.length;
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    resumePageIndex(pages, {
+      isExercise: isExerciseType,
+      solvedIds: new Set(solvedBlockIds),
+      attemptedIds: new Set(attemptedBlockIds),
+    }),
+  );
   // Tracking dos blocos que viraram "Próximo disponível" — para que voltar
   // não force resolver de novo (o servidor já guarda o melhor estado, então
   // re-renderizar o exercício não derruba o solved).

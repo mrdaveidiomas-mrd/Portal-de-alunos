@@ -49,6 +49,35 @@ export function groupBlocksIntoPages<T extends BlockLike>(
   return pages;
 }
 
+// Onde o aluno retoma a parte: na primeira pergunta ainda não acertada. Se ele
+// nunca tentou essa pergunta, volta ao conteúdo logo antes dela, que talvez não
+// tenha lido; numa primeira visita, isso é o início da parte.
+export function resumePageIndex<T extends BlockLike>(
+  pages: readonly BlockPage<T>[],
+  {
+    isExercise,
+    solvedIds,
+    attemptedIds,
+  }: {
+    isExercise: (type: string) => boolean;
+    solvedIds: ReadonlySet<string>;
+    attemptedIds: ReadonlySet<string>;
+  },
+): number {
+  const exercisesAt = (i: number) =>
+    (pages[i]?.items ?? []).filter((b) => isExercise(b.type));
+
+  const pending = pages.findIndex((_, i) =>
+    exercisesAt(i).some((b) => !solvedIds.has(b.id)),
+  );
+  if (pending < 0) return 0;
+  if (exercisesAt(pending).some((b) => attemptedIds.has(b.id))) return pending;
+
+  let start = pending;
+  while (start > 0 && exercisesAt(start - 1).length === 0) start--;
+  return start;
+}
+
 // Com quem um bloco troca de lugar ao subir/descer: uma pergunta se move entre
 // as perguntas do mesmo texto; os demais, entre as páginas da parte.
 export function moveSiblings<T extends BlockLike>(
