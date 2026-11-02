@@ -13,8 +13,15 @@ export function DialogueBlock({ data }: { data: DialogueData }) {
           {line.text}
         </p>
       ))}
-      {/* Diálogo: cada personagem ganha uma voz diferente na função tts. */}
-      <SpeakButton body={{ lines: data.lines, lang: "en" }} />
+      {/* Diálogo: cada personagem ganha uma voz diferente na função tts, no
+          gênero escolhido pelo admin (ou inferido pelo nome, se não houver). */}
+      <SpeakButton
+        body={{
+          lines: data.lines,
+          speakerGenders: data.speakerGenders,
+          lang: "en",
+        }}
+      />
     </div>
   );
 }

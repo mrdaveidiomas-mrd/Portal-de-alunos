@@ -5,9 +5,10 @@
 // Vozes: Chirp 3 HD (mais natural que Neural2). Mesmo nome funciona em todos
 // os locales suportados (en-US, en-GB, en-AU, en-IN, es-US, es-ES).
 //
-//  - Diálogo: cada personagem ganha uma voz com o gênero inferido do nome;
-//    vozes distintas entre personagens do mesmo gênero. Voice/rate enviados
-//    pelo cliente são IGNORADOS em diálogos.
+//  - Diálogo: cada personagem ganha uma voz no gênero escolhido pelo admin
+//    (`speakerGenders`) ou, sem escolha, inferido do nome; vozes distintas
+//    entre personagens do mesmo gênero. Voice/rate enviados pelo cliente são
+//    IGNORADOS em diálogos.
 //  - Texto único / pronúncia: aceita override `voice` e `rate` (preferências
 //    do aluno). Validados contra whitelist; senão usa default por idioma.
 //  - Limpeza do texto: setas viram pausa, emojis/símbolos são removidos,
@@ -105,6 +106,17 @@ function inferGender(speaker: string): "m" | "f" | null {
   return NAME_GENDER[token] ?? null;
 }
 
+// Escolha do admin para o personagem. Vem do cliente: qualquer valor fora do
+// esperado cai na inferência pelo nome.
+function chosenGender(genders: unknown, speaker: string): "m" | "f" | null {
+  if (!genders || typeof genders !== "object") return null;
+  if (!Object.hasOwn(genders, speaker)) return null;
+  const value = (genders as Record<string, unknown>)[speaker];
+  if (value === "female") return "f";
+  if (value === "male") return "m";
+  return null;
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -193,6 +205,7 @@ Deno.serve(async (req) => {
   let body: {
     text?: unknown;
     lines?: unknown;
+    speakerGenders?: unknown;
     lang?: unknown;
     voice?: unknown;
     rate?: unknown;
@@ -218,7 +231,7 @@ Deno.serve(async (req) => {
     const voiceFor = (speaker: string): string => {
       const existing = speakerVoice.get(speaker);
       if (existing) return existing;
-      const g = inferGender(speaker);
+      const g = chosenGender(body.speakerGenders, speaker) ?? inferGender(speaker);
       let v: string;
       if (g === "f") v = female[fi++ % female.length]!;
       else if (g === "m") v = male[mi++ % male.length]!;

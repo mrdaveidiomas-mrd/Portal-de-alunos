@@ -129,6 +129,7 @@ function toInitial(
         ? {
             title: p.data.title ?? "",
             lines: p.data.lines.map((l) => `${l.speaker}: ${l.text}`).join("\n"),
+            speakerGenders: p.data.speakerGenders,
           }
         : {};
     }

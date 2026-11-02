@@ -7,12 +7,14 @@ import {
   CONTENT_TYPE_VALUES,
   TYPE_LABEL,
 } from "@/components/admin/block-types";
+import { DialogueLinesEditor } from "@/components/admin/DialogueLinesEditor";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { PdfUploadField } from "@/components/admin/PdfUploadField";
 import { QuestionImageField } from "@/components/admin/QuestionImageField";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { TableGridEditor } from "@/components/admin/TableGridEditor";
 import { updateBlock } from "@/lib/admin/actions";
+import type { SpeakerGender } from "@/lib/blocks/dialogue";
 import { isExerciseType } from "@/lib/blocks/schemas";
 import { toast } from "@/lib/toast/store";
 import { cn } from "@/lib/utils/cn";
@@ -22,6 +24,7 @@ export interface BlockInitial {
   title?: string;
   items?: string;
   lines?: string;
+  speakerGenders?: Record<string, SpeakerGender>;
   options?: string;
   question?: string;
   answerIndex?: string;
@@ -313,16 +316,12 @@ export function BlockForm({
       )}
 
       {type === "dialogue_tts" && (
-        <>
-          <textarea
-            name="lines"
-            defaultValue={initial.lines}
-            placeholder={"Personagem: fala"}
-            rows={4}
-            className={areaCls}
-          />
-          <Hint>Uma fala por linha no formato “Personagem: texto”.</Hint>
-        </>
+        <DialogueLinesEditor
+          initialLines={initial.lines}
+          initialGenders={initial.speakerGenders}
+          areaClassName={areaCls}
+          selectClassName={inputCls}
+        />
       )}
 
       {type === "multiple_choice" && (

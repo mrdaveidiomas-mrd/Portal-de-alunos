@@ -39,6 +39,9 @@ export const dialogueData = z.object({
   lines: z
     .array(z.object({ speaker: z.string(), text: z.string() }))
     .min(1),
+  // Gênero da voz por personagem, escolhido pelo admin. Quem não está aqui tem
+  // o gênero inferido pelo nome na função tts.
+  speakerGenders: z.record(z.string(), z.enum(["female", "male"])).optional(),
 });
 
 // Prática de pronúncia: lista de frases, cada uma com seu próprio áudio.

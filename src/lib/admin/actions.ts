@@ -11,6 +11,7 @@ import type {
   CreateUserState,
   EnrollState,
 } from "@/lib/admin/types";
+import { parseDialogueLines, parseSpeakerGenders } from "@/lib/blocks/dialogue";
 import { moveSiblings, passageIdOf } from "@/lib/blocks/pages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { withTransientRetry } from "@/lib/utils/retry";
@@ -551,19 +552,20 @@ function buildBlockData(type: string, formData: FormData): {
         },
         solution: null,
       };
-    case "dialogue_tts":
+    case "dialogue_tts": {
+      const dialogueLines = parseDialogueLines(str(formData, "lines"));
       return {
         data: {
           title: str(formData, "title") || undefined,
-          lines: lines("lines").map((line) => {
-            const i = line.indexOf(":");
-            const speaker = i >= 0 ? line.slice(0, i).trim() : "";
-            const text = i >= 0 ? line.slice(i + 1).trim() : line;
-            return { speaker, text };
-          }),
+          lines: dialogueLines,
+          speakerGenders: parseSpeakerGenders(
+            str(formData, "speaker_genders"),
+            dialogueLines,
+          ),
         },
         solution: null,
       };
+    }
     case "multiple_choice":
       return {
         data: {
